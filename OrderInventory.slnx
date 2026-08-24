@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OrderInventory.Api/OrderInventory.Api.csproj" />
+    <Project Path="src/OrderInventory.Core/OrderInventory.Core.csproj" />
+    <Project Path="src/OrderInventory.Infrastructure/OrderInventory.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OrderInventory.IntegrationTests/OrderInventory.IntegrationTests.csproj" />
+    <Project Path="tests/OrderInventory.UnitTests/OrderInventory.UnitTests.csproj" />
+  </Folder>
+</Solution>
