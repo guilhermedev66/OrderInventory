@@ -29,3 +29,12 @@ dotnet restore OrderInventory.slnx
 dotnet build OrderInventory.slnx --no-restore
 dotnet test OrderInventory.slnx --no-build
 ```
+
+Para executar a API, configure a conexão sem versionar credenciais:
+
+```powershell
+$env:ConnectionStrings__OrderInventory="Host=localhost;Port=5432;Database=order_inventory;Username=<usuario>;Password=<senha>"
+dotnet tool restore
+dotnet tool run dotnet-ef -- database update --project src/OrderInventory.Infrastructure
+dotnet run --project src/OrderInventory.Api
+```
