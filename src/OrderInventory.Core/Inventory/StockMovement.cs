@@ -7,7 +7,8 @@ public sealed class StockMovement
         Guid productId,
         StockMovementType type,
         int quantity,
-        DateTimeOffset occurredAtUtc)
+        DateTimeOffset occurredAtUtc,
+        Guid? supplierId = null)
     {
         if (id == Guid.Empty)
         {
@@ -34,11 +35,17 @@ public sealed class StockMovement
             throw new ArgumentException("Movement timestamp must be in UTC.", nameof(occurredAtUtc));
         }
 
+        if (supplierId == Guid.Empty)
+        {
+            throw new ArgumentException("Supplier identifier cannot be empty.", nameof(supplierId));
+        }
+
         Id = id;
         ProductId = productId;
         Type = type;
         Quantity = quantity;
         OccurredAtUtc = occurredAtUtc;
+        SupplierId = supplierId;
     }
 
     public Guid Id { get; }
@@ -50,4 +57,6 @@ public sealed class StockMovement
     public int Quantity { get; }
 
     public DateTimeOffset OccurredAtUtc { get; }
+
+    public Guid? SupplierId { get; }
 }

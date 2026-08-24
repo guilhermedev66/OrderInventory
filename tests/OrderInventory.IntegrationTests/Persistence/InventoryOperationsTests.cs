@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using OrderInventory.Core.Catalog;
 using OrderInventory.Core.Inventory;
 using OrderInventory.Infrastructure.Inventory;
 using OrderInventory.Infrastructure.Persistence;
@@ -32,6 +33,15 @@ public sealed class InventoryOperationsTests : IAsyncLifetime
 
         await using (var context = CreateDbContext())
         {
+            context.Products.Add(new Product(
+                productId,
+                "Concurrent product",
+                $"SKU-{productId:N}",
+                null,
+                10.00m,
+                0,
+                DateTimeOffset.UtcNow));
+            await context.SaveChangesAsync();
             await new InventoryService(context).ReceiveAsync(productId, 10);
         }
 

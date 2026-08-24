@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using OrderInventory.Core.Catalog;
 using OrderInventory.Core.Inventory;
 
 namespace OrderInventory.Infrastructure.Persistence;
@@ -6,6 +7,12 @@ namespace OrderInventory.Infrastructure.Persistence;
 public sealed class OrderInventoryDbContext(DbContextOptions<OrderInventoryDbContext> options)
     : DbContext(options)
 {
+    public DbSet<Product> Products => Set<Product>();
+
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
+
+    public DbSet<ProductSupplier> ProductSuppliers => Set<ProductSupplier>();
+
     public DbSet<InventoryItem> InventoryItems => Set<InventoryItem>();
 
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();

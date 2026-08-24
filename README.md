@@ -12,6 +12,8 @@ Backend para gerenciamento de pedidos e estoque, organizado como monólito modul
 
 As dependências seguem `Api -> Core`, `Api -> Infrastructure` e `Infrastructure -> Core`.
 
+O catálogo mantém dados comerciais do produto separados do saldo de estoque. Produtos possuem SKU único, preço `numeric(18,2)`, status e estoque mínimo. Fornecedores podem ser associados aos produtos e identificados nos recebimentos.
+
 ## Decisões iniciais
 
 - `AvailableStock = OnHandStock - ReservedStock`.

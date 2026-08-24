@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using OrderInventory.Core.Catalog;
 using OrderInventory.Core.Inventory;
 
 namespace OrderInventory.Infrastructure.Persistence.Configurations;
@@ -36,5 +37,10 @@ internal sealed class InventoryItemConfiguration : IEntityTypeConfiguration<Inve
             .IsRequired();
 
         builder.Ignore(item => item.AvailableStock);
+
+        builder.HasOne<Product>()
+            .WithOne()
+            .HasForeignKey<InventoryItem>(item => item.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

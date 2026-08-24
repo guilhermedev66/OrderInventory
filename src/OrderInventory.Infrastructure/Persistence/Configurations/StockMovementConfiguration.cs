@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using OrderInventory.Core.Catalog;
 using OrderInventory.Core.Inventory;
 
 namespace OrderInventory.Infrastructure.Persistence.Configurations;
@@ -38,11 +39,20 @@ internal sealed class StockMovementConfiguration : IEntityTypeConfiguration<Stoc
             .HasColumnType("timestamp with time zone")
             .IsRequired();
 
+        builder.Property(movement => movement.SupplierId)
+            .HasColumnName("supplier_id");
+
         builder.HasOne<InventoryItem>()
             .WithMany()
             .HasForeignKey(movement => movement.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(movement => new { movement.ProductId, movement.OccurredAtUtc });
+        builder.HasIndex(movement => movement.SupplierId);
+
+        builder.HasOne<Supplier>()
+            .WithMany()
+            .HasForeignKey(movement => movement.SupplierId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
