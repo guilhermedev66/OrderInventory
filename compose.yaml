@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: order_inventory
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD in .env}
     volumes:
-      - order_inventory_postgres:/var/lib/postgresql/data
+      - order_inventory_postgres:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U order_inventory -d order_inventory"]
       interval: 5s
