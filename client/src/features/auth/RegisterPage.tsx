@@ -6,7 +6,7 @@ import { useAuth } from '@/auth/useAuth'
 import { registerSchema, type RegisterFormValues } from '@/auth/schemas'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
-import { Logo } from '@/components/ui/Logo'
+import { AuthLayout } from '@/features/auth/AuthLayout'
 import { ApiError } from '@/lib/apiError'
 
 export function RegisterPage() {
@@ -31,17 +31,11 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-6 flex justify-center">
-          <Logo />
-        </div>
-        <div className="rounded-lg border border-border bg-surface p-6 shadow-float">
-          <h1 className="text-[17px] font-semibold text-text-primary">Criar conta</h1>
-          <p className="mt-1 text-[13px] text-text-tertiary">
-            Novas contas iniciam com perfil de usuário padrão.
-          </p>
-
+    <AuthLayout
+      title="Crie sua conta"
+      description="Novas contas iniciam com perfil de usuário padrão."
+      footer={<>Já tem conta?{' '}<Link to="/login" className="font-semibold text-accent-subtle-text hover:text-accent">Entrar</Link></>}
+    >
           <form className="mt-5 flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
             <TextField
               label="E-mail"
@@ -79,14 +73,6 @@ export function RegisterPage() {
               Criar conta
             </Button>
           </form>
-        </div>
-        <p className="mt-4 text-center text-[13px] text-text-tertiary">
-          Já tem conta?{' '}
-          <Link to="/login" className="font-medium text-accent hover:text-accent-hover">
-            Entrar
-          </Link>
-        </p>
-      </div>
-    </div>
+    </AuthLayout>
   )
 }

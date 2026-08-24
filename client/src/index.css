@@ -8,8 +8,23 @@
 @import '@fontsource/ibm-plex-mono/500.css';
 
 html {
-  color-scheme: light;
+  color-scheme: dark;
+  background: var(--color-canvas);
 }
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  pointer-events: none;
+  background: radial-gradient(circle at 72% -10%, rgba(99, 102, 241, 0.11), transparent 34rem), radial-gradient(circle at 18% 105%, rgba(139, 92, 246, 0.08), transparent 30rem);
+}
+
+button, input, select { font: inherit; }
+table tbody tr { transition: background-color 140ms ease; }
+dialog::backdrop { backdrop-filter: blur(4px); }
+* { scrollbar-color: rgba(139, 92, 246, 0.45) transparent; }
 
 body {
   margin: 0;

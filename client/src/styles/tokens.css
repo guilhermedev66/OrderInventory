@@ -1,63 +1,49 @@
-/*
-  Control tower: graphite/steel neutrals, one operational accent (amber —
-  the caution/beacon color of a warehouse floor, reused for primary action
-  since both mean "this needs attention/action now"). Semantic colors carry
-  meaning only (status), never decoration.
-*/
 @theme {
   --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
-
-  /* Neutrals — single cool slate hue, shift only lightness */
-  --color-canvas: #f3f4f6;
-  --color-surface: #ffffff;
-  --color-surface-inset: #eceef1;
-  --color-surface-hover: #f8f9fa;
-
-  --color-border: rgba(15, 23, 42, 0.09);
-  --color-border-strong: rgba(15, 23, 42, 0.16);
-  --color-border-focus: #d97706;
-
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-tertiary: #64748b;
-  --color-text-muted: #94a3b8;
-  --color-text-inverse: #f8fafc;
-
-  /* Accent — amber, primary action + caution semantic */
-  --color-accent: #d97706;
-  --color-accent-hover: #b45309;
-  --color-accent-active: #92400e;
-  --color-accent-subtle: #fef3c7;
-  --color-accent-subtle-text: #92400e;
-
-  /* Semantic — status meaning only */
-  --color-success: #16a34a;
-  --color-success-subtle: #dcfce7;
-  --color-success-subtle-text: #166534;
-
-  --color-danger: #dc2626;
-  --color-danger-hover: #b91c1c;
-  --color-danger-subtle: #fee2e2;
-  --color-danger-subtle-text: #991b1b;
-
-  --color-info: #2563eb;
-  --color-info-subtle: #dbeafe;
-  --color-info-subtle-text: #1e40af;
-
-  /* Graphite sidebar — one shade off canvas, not a foreign color */
-  --color-rail: #171b24;
-  --color-rail-border: rgba(255, 255, 255, 0.08);
-  --color-rail-text: #cbd1dc;
+  --color-canvas: #07101f;
+  --color-surface: #0d192b;
+  --color-surface-inset: #111f34;
+  --color-surface-hover: #152640;
+  --color-border: rgba(148, 163, 184, 0.14);
+  --color-border-strong: rgba(148, 163, 184, 0.24);
+  --color-border-focus: #8b5cf6;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #94a3b8;
+  --color-text-muted: #64748b;
+  --color-text-inverse: #ffffff;
+  --color-accent: #8b5cf6;
+  --color-accent-hover: #7c3aed;
+  --color-accent-active: #6d28d9;
+  --color-accent-subtle: rgba(139, 92, 246, 0.16);
+  --color-accent-subtle-text: #c4b5fd;
+  --color-success: #22c55e;
+  --color-success-subtle: rgba(34, 197, 94, 0.14);
+  --color-success-subtle-text: #86efac;
+  --color-danger: #f43f5e;
+  --color-danger-hover: #e11d48;
+  --color-danger-subtle: rgba(244, 63, 94, 0.14);
+  --color-danger-subtle-text: #fda4af;
+  --color-info: #3b82f6;
+  --color-info-subtle: rgba(59, 130, 246, 0.14);
+  --color-info-subtle-text: #93c5fd;
+  --color-warning: #f59e0b;
+  --color-warning-subtle: rgba(245, 158, 11, 0.14);
+  --color-warning-subtle-text: #fcd34d;
+  --color-rail: #081427;
+  --color-rail-border: rgba(148, 163, 184, 0.13);
+  --color-rail-text: #94a3b8;
   --color-rail-text-active: #ffffff;
-  --color-rail-hover: rgba(255, 255, 255, 0.06);
-
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-
-  --shadow-float:
-    0 0 0 1px rgba(15, 23, 42, 0.06), 0 2px 4px -1px rgba(15, 23, 42, 0.06),
-    0 4px 8px rgba(15, 23, 42, 0.04);
+  --color-rail-hover: rgba(139, 92, 246, 0.1);
+  --radius-xs: 5px;
+  --radius-sm: 7px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-float: 0 18px 48px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(148, 163, 184, 0.08);
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
 }

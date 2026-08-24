@@ -23,7 +23,7 @@ export function buttonClassName(
   className?: string,
 ) {
   return clsx(
-    'inline-flex items-center justify-center rounded-sm font-medium transition-[background-color,border-color,transform] duration-150 ease-out active:scale-[0.97] disabled:cursor-not-allowed disabled:active:scale-100',
+    'inline-flex items-center justify-center rounded-sm font-semibold shadow-sm transition-[background-color,border-color,color,transform,box-shadow] duration-150 ease-out hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:shadow-none disabled:active:scale-100',
     variantClasses[variant],
     sizeClasses[size],
     className,

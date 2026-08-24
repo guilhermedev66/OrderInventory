@@ -83,6 +83,7 @@ export function OrdersPage() {
 
       <div className="flex items-center gap-2 px-6 pt-4">
         <select
+          aria-label="Filtrar pedidos por status"
           value={status ?? ''}
           onChange={(e) => updateParams({ status: e.target.value || undefined })}
           className="h-9 rounded-sm border border-border-strong bg-surface-inset px-3 text-[13px] text-text-primary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/25"
@@ -127,7 +128,11 @@ export function OrdersPage() {
                     <tr
                       key={order.id}
                       onClick={() => navigate(`/orders/${order.id}`)}
-                      className="cursor-pointer hover:bg-surface-hover"
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') navigate(`/orders/${order.id}`)
+                      }}
+                      tabIndex={0}
+                      className="cursor-pointer hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
                     >
                       <td className="px-4 py-2.5 font-mono text-[12px] text-text-secondary">
                         {order.id.slice(0, 8)}

@@ -2,7 +2,7 @@ import { forwardRef, type InputHTMLAttributes, type ReactNode, type SelectHTMLAt
 import { clsx } from 'clsx'
 
 const controlClasses =
-  'h-9 w-full rounded-sm border border-border-strong bg-surface-inset px-3 text-sm text-text-primary placeholder:text-text-muted focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/25 disabled:cursor-not-allowed disabled:opacity-60'
+  'h-10 w-full rounded-sm border border-border-strong bg-surface-inset px-3 text-[13px] text-text-primary shadow-inner shadow-black/10 placeholder:text-text-muted transition-colors focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-60'
 
 interface FieldWrapperProps {
   label: string

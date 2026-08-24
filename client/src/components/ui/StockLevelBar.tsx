@@ -27,7 +27,7 @@ export function StockLevelBar({ onHandStock, reservedStock, minimumStock, size =
         {onHandStock > 0 ? (
           <>
             <div
-              className={clsx('absolute inset-y-0 left-0', belowMinimum ? 'bg-accent' : 'bg-success')}
+              className={clsx('absolute inset-y-0 left-0', belowMinimum ? 'bg-warning' : 'bg-success')}
               style={{ width: `${availablePct}%` }}
             />
             <div
@@ -46,7 +46,7 @@ export function StockLevelBar({ onHandStock, reservedStock, minimumStock, size =
       </div>
       <div className="flex items-center gap-3 text-[11px] tabular-nums text-text-tertiary">
         <span className="flex items-center gap-1">
-          <span className={clsx('size-1.5 rounded-full', belowMinimum ? 'bg-accent' : 'bg-success')} />
+          <span className={clsx('size-1.5 rounded-full', belowMinimum ? 'bg-warning' : 'bg-success')} />
           Disp. {available}
         </span>
         <span className="flex items-center gap-1">

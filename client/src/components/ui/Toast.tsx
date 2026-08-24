@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             className={clsx(
-              'animate-[toast-in_180ms_cubic-bezier(0.23,1,0.32,1)] rounded-sm border-l-2 bg-surface px-3.5 py-3 text-[13px] text-text-primary shadow-float',
+              'animate-[toast-in_180ms_cubic-bezier(0.23,1,0.32,1)] rounded-sm border border-border border-l-2 bg-surface px-3.5 py-3 text-[13px] text-text-primary shadow-float',
               toneClasses[toast.tone],
             )}
           >

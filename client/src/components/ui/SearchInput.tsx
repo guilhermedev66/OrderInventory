@@ -30,7 +30,7 @@ export function SearchInput({
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         placeholder={placeholder}
-        className="h-9 w-full rounded-sm border border-border-strong bg-surface-inset py-1.5 pl-8 pr-3 text-sm text-text-primary placeholder:text-text-muted focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/25"
+        className="h-10 w-full rounded-sm border border-border-strong bg-surface-inset py-1.5 pl-9 pr-3 text-[13px] text-text-primary shadow-inner shadow-black/10 placeholder:text-text-muted transition-colors focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
       />
     </div>
   )

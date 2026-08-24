@@ -1,4 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query'
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '@/auth/AuthProvider'
 import { PublicOnly } from '@/auth/PublicOnly'
@@ -7,22 +8,23 @@ import { RequireRole } from '@/auth/RequireRole'
 import { SessionWatcher } from '@/auth/SessionWatcher'
 import { AppShell } from '@/components/layout/AppShell'
 import { ToastProvider } from '@/components/ui/Toast'
-import { AdminUsersPage } from '@/features/admin/AdminUsersPage'
-import { LoginPage } from '@/features/auth/LoginPage'
-import { RegisterPage } from '@/features/auth/RegisterPage'
-import { DashboardPage } from '@/features/dashboard/DashboardPage'
-import { InventoryBalancesPage } from '@/features/inventory/InventoryBalancesPage'
-import { InventoryMovementsPage } from '@/features/inventory/InventoryMovementsPage'
-import { OrderDetailPage } from '@/features/orders/OrderDetailPage'
-import { OrdersPage } from '@/features/orders/OrdersPage'
-import { ProductCreatePage } from '@/features/products/ProductCreatePage'
-import { ProductDetailPage } from '@/features/products/ProductDetailPage'
-import { ProductEditPage } from '@/features/products/ProductEditPage'
-import { ProductsListPage } from '@/features/products/ProductsListPage'
-import { SuppliersPage } from '@/features/suppliers/SuppliersPage'
 import { queryClient } from '@/lib/queryClient'
 import { ForbiddenPage } from '@/routes/ForbiddenPage'
 import { NotFoundPage } from '@/routes/NotFoundPage'
+
+const AdminUsersPage = lazy(() => import('@/features/admin/AdminUsersPage').then((module) => ({ default: module.AdminUsersPage })))
+const LoginPage = lazy(() => import('@/features/auth/LoginPage').then((module) => ({ default: module.LoginPage })))
+const RegisterPage = lazy(() => import('@/features/auth/RegisterPage').then((module) => ({ default: module.RegisterPage })))
+const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage').then((module) => ({ default: module.DashboardPage })))
+const InventoryBalancesPage = lazy(() => import('@/features/inventory/InventoryBalancesPage').then((module) => ({ default: module.InventoryBalancesPage })))
+const InventoryMovementsPage = lazy(() => import('@/features/inventory/InventoryMovementsPage').then((module) => ({ default: module.InventoryMovementsPage })))
+const OrderDetailPage = lazy(() => import('@/features/orders/OrderDetailPage').then((module) => ({ default: module.OrderDetailPage })))
+const OrdersPage = lazy(() => import('@/features/orders/OrdersPage').then((module) => ({ default: module.OrdersPage })))
+const ProductCreatePage = lazy(() => import('@/features/products/ProductCreatePage').then((module) => ({ default: module.ProductCreatePage })))
+const ProductDetailPage = lazy(() => import('@/features/products/ProductDetailPage').then((module) => ({ default: module.ProductDetailPage })))
+const ProductEditPage = lazy(() => import('@/features/products/ProductEditPage').then((module) => ({ default: module.ProductEditPage })))
+const ProductsListPage = lazy(() => import('@/features/products/ProductsListPage').then((module) => ({ default: module.ProductsListPage })))
+const SuppliersPage = lazy(() => import('@/features/suppliers/SuppliersPage').then((module) => ({ default: module.SuppliersPage })))
 
 export default function App() {
   return (
@@ -31,6 +33,7 @@ export default function App() {
         <BrowserRouter>
           <AuthProvider>
             <SessionWatcher />
+            <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-canvas text-[13px] text-text-tertiary">Carregando interface…</div>}>
             <Routes>
               <Route element={<PublicOnly />}>
                 <Route path="/login" element={<LoginPage />} />
@@ -64,6 +67,7 @@ export default function App() {
 
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
+            </Suspense>
           </AuthProvider>
         </BrowserRouter>
       </ToastProvider>

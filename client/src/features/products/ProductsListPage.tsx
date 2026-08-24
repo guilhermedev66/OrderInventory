@@ -105,7 +105,11 @@ export function ProductsListPage() {
                       <tr
                         key={product.id}
                         onClick={() => navigate(`/products/${product.id}`)}
-                        className="cursor-pointer hover:bg-surface-hover"
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') navigate(`/products/${product.id}`)
+                        }}
+                        tabIndex={0}
+                        className="cursor-pointer hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
                       >
                         <td className="px-4 py-2.5 font-medium text-text-primary">{product.name}</td>
                         <td className="px-4 py-2.5 font-mono text-[12px] text-text-tertiary">{product.sku}</td>

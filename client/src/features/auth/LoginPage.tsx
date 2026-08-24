@@ -6,7 +6,7 @@ import { useAuth } from '@/auth/useAuth'
 import { loginSchema, type LoginFormValues } from '@/auth/schemas'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
-import { Logo } from '@/components/ui/Logo'
+import { AuthLayout } from '@/features/auth/AuthLayout'
 import { ApiError } from '@/lib/apiError'
 
 export function LoginPage() {
@@ -33,15 +33,11 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-6 flex justify-center">
-          <Logo />
-        </div>
-        <div className="rounded-lg border border-border bg-surface p-6 shadow-float">
-          <h1 className="text-[17px] font-semibold text-text-primary">Entrar</h1>
-          <p className="mt-1 text-[13px] text-text-tertiary">Acesse o painel de pedidos e estoque.</p>
-
+    <AuthLayout
+      title="Acesse sua operação"
+      description="Entre para acompanhar pedidos, produtos e estoque."
+      footer={<>Não tem conta?{' '}<Link to="/register" className="font-semibold text-accent-subtle-text hover:text-accent">Criar conta</Link></>}
+    >
           <form className="mt-5 flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
             <TextField
               label="E-mail"
@@ -70,14 +66,6 @@ export function LoginPage() {
               Entrar
             </Button>
           </form>
-        </div>
-        <p className="mt-4 text-center text-[13px] text-text-tertiary">
-          Não tem conta?{' '}
-          <Link to="/register" className="font-medium text-accent hover:text-accent-hover">
-            Criar conta
-          </Link>
-        </p>
-      </div>
-    </div>
+    </AuthLayout>
   )
 }
