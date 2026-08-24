@@ -24,6 +24,8 @@ As dependências seguem `Api -> Core`, `Api -> Infrastructure` e `Infrastructure
 
 ## Validação
 
+Os testes de integração iniciam instâncias descartáveis do PostgreSQL e exigem o Docker em execução.
+
 ```powershell
 dotnet restore OrderInventory.slnx
 dotnet build OrderInventory.slnx --no-restore
