@@ -121,6 +121,30 @@ public sealed class ApiSecurityTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.BadRequest, duplicate.StatusCode);
     }
 
+    [Fact]
+    public async Task InventoryListsNewProductBeforeItsFirstReceipt()
+    {
+        var manager = await CreatePrivilegedUserAsync("inventory-manager@example.test", ApplicationRoles.Manager);
+        UseToken(manager.AccessToken);
+        var productResponse = await _client.PostAsJsonAsync("/api/products", new
+        {
+            name = "Zero stock product",
+            sku = "ZERO-STOCK-001",
+            description = (string?)null,
+            price = 10m,
+            minimumStock = 2
+        });
+        productResponse.EnsureSuccessStatusCode();
+
+        var inventoryResponse = await _client.GetAsync("/api/inventory");
+        inventoryResponse.EnsureSuccessStatusCode();
+        var body = await inventoryResponse.Content.ReadAsStringAsync();
+
+        Assert.Contains("ZERO-STOCK-001", body);
+        Assert.Contains("\"onHandStock\":0", body);
+        Assert.Contains("\"availableStock\":0", body);
+    }
+
     private async Task<AuthResponse> RegisterAsync(string email)
     {
         var response = await _client.PostAsJsonAsync("/api/auth/register", new { email, password = Password });

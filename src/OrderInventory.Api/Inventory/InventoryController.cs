@@ -23,22 +23,29 @@ public sealed class InventoryController(
     {
         page = Math.Max(page, 1);
         pageSize = Math.Clamp(pageSize, 1, 100);
-        var query = dbContext.InventoryItems.AsNoTracking()
-            .Join(dbContext.Products.AsNoTracking(), inventory => inventory.ProductId, product => product.Id,
-                (inventory, product) => new { inventory, product });
+        var query = dbContext.Products.AsNoTracking()
+            .GroupJoin(
+                dbContext.InventoryItems.AsNoTracking(),
+                product => product.Id,
+                inventory => inventory.ProductId,
+                (product, inventory) => new { product, inventory = inventory.FirstOrDefault() });
         if (belowMinimumOnly)
         {
-            query = query.Where(item => item.inventory.OnHandStock - item.inventory.ReservedStock < item.product.MinimumStock);
+            query = query.Where(item =>
+                (item.inventory == null ? 0 : item.inventory.OnHandStock - item.inventory.ReservedStock) <
+                item.product.MinimumStock);
         }
         var total = await query.CountAsync(cancellationToken);
         var items = await query.OrderBy(item => item.product.Name)
             .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(item => new InventoryResponse(
                 item.product.Id, item.product.Name, item.product.Sku,
-                item.inventory.OnHandStock, item.inventory.ReservedStock,
-                item.inventory.OnHandStock - item.inventory.ReservedStock,
+                item.inventory == null ? 0 : item.inventory.OnHandStock,
+                item.inventory == null ? 0 : item.inventory.ReservedStock,
+                item.inventory == null ? 0 : item.inventory.OnHandStock - item.inventory.ReservedStock,
                 item.product.MinimumStock,
-                item.inventory.OnHandStock - item.inventory.ReservedStock < item.product.MinimumStock))
+                (item.inventory == null ? 0 : item.inventory.OnHandStock - item.inventory.ReservedStock) <
+                item.product.MinimumStock))
             .ToListAsync(cancellationToken);
         return new PageResponse<InventoryResponse>(items, page, pageSize, total);
     }
