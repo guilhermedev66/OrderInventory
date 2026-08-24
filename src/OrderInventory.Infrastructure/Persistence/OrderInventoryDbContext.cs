@@ -1,12 +1,15 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using OrderInventory.Core.Catalog;
 using OrderInventory.Core.Inventory;
 using OrderInventory.Core.Orders;
+using OrderInventory.Infrastructure.Identity;
 
 namespace OrderInventory.Infrastructure.Persistence;
 
 public sealed class OrderInventoryDbContext(DbContextOptions<OrderInventoryDbContext> options)
-    : DbContext(options)
+    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
     public DbSet<Product> Products => Set<Product>();
 
@@ -38,7 +41,23 @@ public sealed class OrderInventoryDbContext(DbContextOptions<OrderInventoryDbCon
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+        ConfigureIdentityTables(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(OrderInventoryDbContext).Assembly);
+    }
+
+    private static void ConfigureIdentityTables(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ApplicationUser>().ToTable("users");
+        modelBuilder.Entity<IdentityRole<Guid>>().ToTable("roles");
+        modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("user_roles");
+        modelBuilder.Entity<IdentityUserClaim<Guid>>().ToTable("user_claims");
+        modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("user_logins");
+        modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("role_claims");
+        modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("user_tokens");
+        modelBuilder.Entity<ApplicationUser>()
+            .Property(user => user.CreatedAtUtc)
+            .HasColumnName("created_at_utc");
     }
 
     private void EnsureStockMovementsAreAppendOnly()
