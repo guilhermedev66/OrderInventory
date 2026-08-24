@@ -51,7 +51,7 @@ public sealed class InventoryService(OrderInventoryDbContext dbContext)
                 "Product was not found, is inactive, or is not linked to the active supplier.");
         }
 
-        AddMovement(productId, StockMovementType.Received, quantity, supplierId);
+        AddMovement(productId, StockMovementType.Received, quantity, supplierId, null);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
@@ -64,20 +64,7 @@ public sealed class InventoryService(OrderInventoryDbContext dbContext)
         Validate(productId, quantity);
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-        var affectedRows = await dbContext.Database.ExecuteSqlInterpolatedAsync($"""
-            UPDATE inventory_items
-            SET reserved_stock = reserved_stock + {quantity}
-            WHERE product_id = {productId}
-              AND on_hand_stock - reserved_stock >= {quantity}
-            """, cancellationToken);
-
-        if (affectedRows != 1)
-        {
-            throw new InvalidOperationException("Inventory item was not found or has insufficient available stock.");
-        }
-
-        AddMovement(productId, StockMovementType.Reserved, quantity, null);
+        await ReserveWithinTransactionAsync(productId, quantity, null, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
@@ -91,6 +78,44 @@ public sealed class InventoryService(OrderInventoryDbContext dbContext)
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
+        await ReleaseWithinTransactionAsync(productId, quantity, null, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    internal async Task ReserveWithinTransactionAsync(
+        Guid productId,
+        int quantity,
+        Guid? orderId,
+        CancellationToken cancellationToken)
+    {
+        Validate(productId, quantity);
+        EnsureActiveTransaction();
+
+        var affectedRows = await dbContext.Database.ExecuteSqlInterpolatedAsync($"""
+            UPDATE inventory_items
+            SET reserved_stock = reserved_stock + {quantity}
+            WHERE product_id = {productId}
+              AND on_hand_stock - reserved_stock >= {quantity}
+            """, cancellationToken);
+
+        if (affectedRows != 1)
+        {
+            throw new InvalidOperationException("Inventory item was not found or has insufficient available stock.");
+        }
+
+        AddMovement(productId, StockMovementType.Reserved, quantity, null, orderId);
+    }
+
+    internal async Task ReleaseWithinTransactionAsync(
+        Guid productId,
+        int quantity,
+        Guid? orderId,
+        CancellationToken cancellationToken)
+    {
+        Validate(productId, quantity);
+        EnsureActiveTransaction();
+
         var affectedRows = await dbContext.Database.ExecuteSqlInterpolatedAsync($"""
             UPDATE inventory_items
             SET reserved_stock = reserved_stock - {quantity}
@@ -103,16 +128,41 @@ public sealed class InventoryService(OrderInventoryDbContext dbContext)
             throw new InvalidOperationException("Inventory item was not found or has insufficient reserved stock.");
         }
 
-        AddMovement(productId, StockMovementType.ReservationReleased, quantity, null);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        AddMovement(productId, StockMovementType.ReservationReleased, quantity, null, orderId);
+    }
+
+    internal async Task FulfillWithinTransactionAsync(
+        Guid productId,
+        int quantity,
+        Guid orderId,
+        CancellationToken cancellationToken)
+    {
+        Validate(productId, quantity);
+        EnsureActiveTransaction();
+
+        var affectedRows = await dbContext.Database.ExecuteSqlInterpolatedAsync($"""
+            UPDATE inventory_items
+            SET on_hand_stock = on_hand_stock - {quantity},
+                reserved_stock = reserved_stock - {quantity}
+            WHERE product_id = {productId}
+              AND on_hand_stock >= {quantity}
+              AND reserved_stock >= {quantity}
+            """, cancellationToken);
+
+        if (affectedRows != 1)
+        {
+            throw new InvalidOperationException("Inventory item does not contain the expected reservation.");
+        }
+
+        AddMovement(productId, StockMovementType.Fulfilled, quantity, null, orderId);
     }
 
     private void AddMovement(
         Guid productId,
         StockMovementType type,
         int quantity,
-        Guid? supplierId)
+        Guid? supplierId,
+        Guid? orderId)
     {
         dbContext.StockMovements.Add(new StockMovement(
             Guid.NewGuid(),
@@ -120,7 +170,16 @@ public sealed class InventoryService(OrderInventoryDbContext dbContext)
             type,
             quantity,
             DateTimeOffset.UtcNow,
-            supplierId));
+            supplierId,
+            orderId));
+    }
+
+    private void EnsureActiveTransaction()
+    {
+        if (dbContext.Database.CurrentTransaction is null)
+        {
+            throw new InvalidOperationException("An active transaction is required for this stock operation.");
+        }
     }
 
     private static void Validate(Guid productId, int quantity)

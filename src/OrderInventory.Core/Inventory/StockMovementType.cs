@@ -4,5 +4,6 @@ public enum StockMovementType
 {
     Received,
     Reserved,
-    ReservationReleased
+    ReservationReleased,
+    Fulfilled
 }

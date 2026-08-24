@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrderInventory.Core.Catalog;
 using OrderInventory.Core.Inventory;
+using OrderInventory.Core.Orders;
 
 namespace OrderInventory.Infrastructure.Persistence;
 
@@ -16,6 +17,10 @@ public sealed class OrderInventoryDbContext(DbContextOptions<OrderInventoryDbCon
     public DbSet<InventoryItem> InventoryItems => Set<InventoryItem>();
 
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+
+    public DbSet<Order> Orders => Set<Order>();
+
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {

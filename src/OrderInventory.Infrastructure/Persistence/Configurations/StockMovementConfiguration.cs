@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OrderInventory.Core.Catalog;
 using OrderInventory.Core.Inventory;
+using OrderInventory.Core.Orders;
 
 namespace OrderInventory.Infrastructure.Persistence.Configurations;
 
@@ -42,6 +43,9 @@ internal sealed class StockMovementConfiguration : IEntityTypeConfiguration<Stoc
         builder.Property(movement => movement.SupplierId)
             .HasColumnName("supplier_id");
 
+        builder.Property(movement => movement.OrderId)
+            .HasColumnName("order_id");
+
         builder.HasOne<InventoryItem>()
             .WithMany()
             .HasForeignKey(movement => movement.ProductId)
@@ -49,10 +53,16 @@ internal sealed class StockMovementConfiguration : IEntityTypeConfiguration<Stoc
 
         builder.HasIndex(movement => new { movement.ProductId, movement.OccurredAtUtc });
         builder.HasIndex(movement => movement.SupplierId);
+        builder.HasIndex(movement => movement.OrderId);
 
         builder.HasOne<Supplier>()
             .WithMany()
             .HasForeignKey(movement => movement.SupplierId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Order>()
+            .WithMany()
+            .HasForeignKey(movement => movement.OrderId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

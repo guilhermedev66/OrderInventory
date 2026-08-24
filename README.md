@@ -14,6 +14,8 @@ As dependências seguem `Api -> Core`, `Api -> Infrastructure` e `Infrastructure
 
 O catálogo mantém dados comerciais do produto separados do saldo de estoque. Produtos possuem SKU único, preço `numeric(18,2)`, status e estoque mínimo. Fornecedores podem ser associados aos produtos e identificados nos recebimentos.
 
+Pedidos seguem `Draft -> Pending -> Confirmed -> Processing -> Completed`. A confirmação reserva todos os itens atomicamente em ordem determinística; o cancelamento de pedido confirmado libera apenas suas reservas e a conclusão consome o estoque físico. Preços unitários ficam registrados no item do pedido e não acompanham alterações posteriores do catálogo.
+
 ## Decisões iniciais
 
 - `AvailableStock = OnHandStock - ReservedStock`.

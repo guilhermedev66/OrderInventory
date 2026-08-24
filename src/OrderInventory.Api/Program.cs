@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrderInventory.Infrastructure.Inventory;
+using OrderInventory.Infrastructure.Orders;
 using OrderInventory.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,7 @@ builder.Services.AddDbContext<OrderInventoryDbContext>(options =>
         ?? throw new InvalidOperationException(
             "Connection string 'OrderInventory' is not configured.")));
 builder.Services.AddScoped<InventoryService>();
+builder.Services.AddScoped<OrderService>();
 
 var app = builder.Build();
 

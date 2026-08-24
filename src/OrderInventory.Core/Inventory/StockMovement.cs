@@ -8,7 +8,8 @@ public sealed class StockMovement
         StockMovementType type,
         int quantity,
         DateTimeOffset occurredAtUtc,
-        Guid? supplierId = null)
+        Guid? supplierId = null,
+        Guid? orderId = null)
     {
         if (id == Guid.Empty)
         {
@@ -40,12 +41,18 @@ public sealed class StockMovement
             throw new ArgumentException("Supplier identifier cannot be empty.", nameof(supplierId));
         }
 
+        if (orderId == Guid.Empty)
+        {
+            throw new ArgumentException("Order identifier cannot be empty.", nameof(orderId));
+        }
+
         Id = id;
         ProductId = productId;
         Type = type;
         Quantity = quantity;
         OccurredAtUtc = occurredAtUtc;
         SupplierId = supplierId;
+        OrderId = orderId;
     }
 
     public Guid Id { get; }
@@ -59,4 +66,6 @@ public sealed class StockMovement
     public DateTimeOffset OccurredAtUtc { get; }
 
     public Guid? SupplierId { get; }
+
+    public Guid? OrderId { get; }
 }
