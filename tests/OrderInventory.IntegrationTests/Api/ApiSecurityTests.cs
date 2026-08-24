@@ -102,6 +102,25 @@ public sealed class ApiSecurityTests : IAsyncLifetime
         Assert.Contains("/api/orders", await openApi.Content.ReadAsStringAsync());
     }
 
+    [Fact]
+    public async Task AdministrationPolicyRejectsManagerAndAdminCanCreateUsers()
+    {
+        var manager = await CreatePrivilegedUserAsync("manager-admin-test@example.test", ApplicationRoles.Manager);
+        var request = new { email = "created-manager@example.test", password = Password, role = ApplicationRoles.Manager };
+
+        UseToken(manager.AccessToken);
+        var forbidden = await _client.PostAsJsonAsync("/api/admin/users", request);
+        Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
+
+        var admin = await CreatePrivilegedUserAsync("admin@example.test", ApplicationRoles.Admin);
+        UseToken(admin.AccessToken);
+        var created = await _client.PostAsJsonAsync("/api/admin/users", request);
+        var duplicate = await _client.PostAsJsonAsync("/api/admin/users", request);
+
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, duplicate.StatusCode);
+    }
+
     private async Task<AuthResponse> RegisterAsync(string email)
     {
         var response = await _client.PostAsJsonAsync("/api/auth/register", new { email, password = Password });
@@ -115,18 +134,22 @@ public sealed class ApiSecurityTests : IAsyncLifetime
 
     private async Task<AuthResponse> CreateManagerAsync()
     {
-        const string email = "manager@example.test";
+        return await CreatePrivilegedUserAsync("manager@example.test", ApplicationRoles.Manager);
+    }
+
+    private async Task<AuthResponse> CreatePrivilegedUserAsync(string email, string role)
+    {
         await using (var scope = _factory.Services.CreateAsyncScope())
         {
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            var manager = new ApplicationUser
+            var user = new ApplicationUser
             {
                 Email = email,
                 UserName = email,
                 CreatedAtUtc = DateTimeOffset.UtcNow
             };
-            Assert.True((await userManager.CreateAsync(manager, Password)).Succeeded);
-            Assert.True((await userManager.AddToRoleAsync(manager, ApplicationRoles.Manager)).Succeeded);
+            Assert.True((await userManager.CreateAsync(user, Password)).Succeeded);
+            Assert.True((await userManager.AddToRoleAsync(user, role)).Succeeded);
         }
 
         var response = await _client.PostAsJsonAsync("/api/auth/login", new { email, password = Password });

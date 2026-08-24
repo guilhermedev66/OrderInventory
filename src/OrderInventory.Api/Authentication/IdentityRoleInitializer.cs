@@ -39,9 +39,16 @@ public static class IdentityRoleInitializer
         }
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        if (await userManager.FindByEmailAsync(adminEmail) is not null)
+        var existingUser = await userManager.FindByEmailAsync(adminEmail);
+        if (existingUser is not null)
         {
-            return;
+            if (await userManager.IsInRoleAsync(existingUser, ApplicationRoles.Admin))
+            {
+                return;
+            }
+
+            throw new InvalidOperationException(
+                "Bootstrap administrator email already belongs to a non-administrator account.");
         }
         var normalizedEmail = adminEmail.Trim().ToLowerInvariant();
         var admin = new ApplicationUser
@@ -59,6 +66,7 @@ public static class IdentityRoleInitializer
         var roleResult = await userManager.AddToRoleAsync(admin, ApplicationRoles.Admin);
         if (!roleResult.Succeeded)
         {
+            await userManager.DeleteAsync(admin);
             throw new InvalidOperationException(
                 $"Could not assign administrator role: {string.Join(", ", roleResult.Errors.Select(error => error.Description))}");
         }

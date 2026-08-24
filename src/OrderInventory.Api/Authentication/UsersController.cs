@@ -33,13 +33,17 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager) : 
             CreatedAtUtc = DateTimeOffset.UtcNow
         };
         var result = await userManager.CreateAsync(user, request.Password);
+        var userCreated = result.Succeeded;
         if (result.Succeeded)
         {
             result = await userManager.AddToRoleAsync(user, request.Role);
         }
         if (!result.Succeeded)
         {
-            await userManager.DeleteAsync(user);
+            if (userCreated)
+            {
+                await userManager.DeleteAsync(user);
+            }
             foreach (var error in result.Errors) ModelState.AddModelError(error.Code, error.Description);
             return ValidationProblem(ModelState);
         }
