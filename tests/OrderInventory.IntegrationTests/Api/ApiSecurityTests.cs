@@ -89,6 +89,19 @@ public sealed class ApiSecurityTests : IAsyncLifetime
         Assert.Equal(await unknown.Content.ReadAsStringAsync(), await wrongPassword.Content.ReadAsStringAsync());
     }
 
+    [Fact]
+    public async Task HealthAndOpenApiContractsAreAvailableWithoutAuthentication()
+    {
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        var health = await _client.GetAsync("/health");
+        var openApi = await _client.GetAsync("/openapi/v1.json");
+
+        Assert.Equal(HttpStatusCode.OK, health.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, openApi.StatusCode);
+        Assert.Contains("/api/orders", await openApi.Content.ReadAsStringAsync());
+    }
+
     private async Task<AuthResponse> RegisterAsync(string email)
     {
         var response = await _client.PostAsJsonAsync("/api/auth/register", new { email, password = Password });
