@@ -1,6 +1,6 @@
 # OrderInventory
 
-Backend de gerenciamento de catálogo, pedidos e estoque para demonstrar consistência transacional em um cenário empresarial sem transformar o projeto em um ERP.
+Sistema de gerenciamento de catálogo, pedidos e estoque para demonstrar consistência transacional em um cenário empresarial sem transformar o projeto em um ERP.
 
 ## Arquitetura e stack
 
@@ -11,6 +11,7 @@ Monólito modular em .NET 10, ASP.NET Core, Entity Framework Core e PostgreSQL:
 - `OrderInventory.Infrastructure`: EF Core, migrations e operações SQL transacionais.
 - `OrderInventory.UnitTests`: invariantes e transições do domínio.
 - `OrderInventory.IntegrationTests`: API, persistência e concorrência com PostgreSQL real via Testcontainers.
+- `client`: painel React/TypeScript com autenticação, controle visual por perfil e integração com a API.
 
 As dependências seguem `Api -> Core`, `Api -> Infrastructure` e `Infrastructure -> Core`. Não são usados MediatR, CQRS, mensageria nem repositório genérico.
 
@@ -57,6 +58,17 @@ docker compose up --build
 
 A API fica em `http://localhost:8080`, o Swagger em `http://localhost:8080/swagger` e o health check em `http://localhost:8080/health`. As migrations são aplicadas na inicialização. `BOOTSTRAP_ADMIN_EMAIL` e `BOOTSTRAP_ADMIN_PASSWORD` são opcionais para o primeiro administrador e devem ser removidos do `.env` após sua criação.
 
+Para iniciar o frontend em outro terminal:
+
+```powershell
+Set-Location client
+Copy-Item .env.example .env
+npm ci
+npm run dev
+```
+
+O painel fica em `http://localhost:5173`. Consulte `client/README.md` para os gates frontend e o roteiro E2E real.
+
 Sem Compose, configure ao menos:
 
 ```powershell
@@ -77,7 +89,7 @@ dotnet build OrderInventory.slnx --no-restore
 dotnet test OrderInventory.slnx --no-build
 ```
 
-A GitHub Action executa restore, build Release e todas as suítes. O runner hospedado fornece o Docker usado pelo Testcontainers.
+A GitHub Action executa restore, build Release e todas as suítes do backend, além de lint, typecheck, testes e build do frontend. O runner hospedado fornece o Docker usado pelo Testcontainers.
 
 ## Trade-offs
 
