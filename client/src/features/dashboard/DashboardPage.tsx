@@ -55,7 +55,7 @@ function ManagementDashboard() {
     <div className="space-y-5">
       <OrderPipelineOverview counts={orderCounts.counts} loading={orderCounts.isLoading} />
 
-      <Panel className="flex flex-wrap overflow-hidden">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatTile
           label="Produtos ativos"
           value={activeProducts.isLoading ? '—' : (activeProducts.data?.totalCount ?? 0)}
@@ -73,7 +73,7 @@ function ManagementDashboard() {
           tone={pendingCount > 0 ? 'warning' : 'neutral'}
           icon={<Clock className="size-4" />}
         />
-      </Panel>
+      </div>
 
       <div className={clsx('grid gap-5', belowMinimumCount > 0 ? 'xl:grid-cols-[1.5fr_1fr]' : 'xl:grid-cols-[1fr_1fr]')}>
         <LowStock query={belowMinimum} />
@@ -145,7 +145,7 @@ function OrderPipelineOverview({ counts, loading }: { counts: Record<OrderStatus
                 <div key={status} className={clsx('flex items-start', !isLast && 'min-w-[92px] flex-1')}>
                   <div className="flex min-w-[76px] flex-col items-center gap-2">
                     <span
-                      className="text-[28px] font-semibold leading-none tabular-nums tracking-[-0.03em]"
+                      className="text-[32px] font-semibold leading-none tabular-nums tracking-[-0.035em]"
                       style={{ color: hasVolume ? STATUS_COLORS[status] : 'var(--color-text-muted)' }}
                     >
                       {value}
