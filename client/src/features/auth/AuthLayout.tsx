@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { Logo } from '@/components/ui/Logo'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 const LEDGER_PREVIEW: Array<{ label: string; tone: 'success' | 'warning' | 'info'; sku: string; qty: string }> = [
   { label: 'Recebimento', tone: 'success', sku: 'SKU-2201', qty: '+40' },
@@ -35,7 +36,8 @@ export function AuthLayout({ title, description, children, footer }: { title: st
         </div>
         <p className="relative text-[11px] text-text-muted">OrderInventory · Operação segura e consistente</p>
       </section>
-      <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-8">
+      <section className="relative flex min-h-screen items-center justify-center px-5 py-10 sm:px-8">
+        <div className="absolute right-5 top-5 sm:right-8 sm:top-8"><ThemeToggle /></div>
         <div className="w-full max-w-[420px]">
           <div className="mb-9 lg:hidden"><Logo /></div>
           <div className="mb-7"><h2 className="text-[26px] font-semibold tracking-[-0.03em] text-text-primary">{title}</h2><p className="mt-2 text-[14px] text-text-tertiary">{description}</p></div>

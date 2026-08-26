@@ -1,6 +1,10 @@
 @theme {
   --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* Values below are the dark defaults — also the pre-hydration fallback
+     before the theme script resolves the stored/system preference. Light
+     mode overrides every one of these under `:root[data-theme='light']`. */
   --color-canvas: #07101f;
   --color-surface: #0d192b;
   --color-surface-inset: #111f34;
@@ -19,6 +23,7 @@
   --color-accent-subtle: rgba(139, 92, 246, 0.16);
   --color-accent-subtle-text: #c4b5fd;
   --color-success: #22c55e;
+  --color-success-hover: #16a34a;
   --color-success-subtle: rgba(34, 197, 94, 0.14);
   --color-success-subtle-text: #86efac;
   --color-danger: #f43f5e;
@@ -26,9 +31,11 @@
   --color-danger-subtle: rgba(244, 63, 94, 0.14);
   --color-danger-subtle-text: #fda4af;
   --color-info: #3b82f6;
+  --color-info-hover: #2563eb;
   --color-info-subtle: rgba(59, 130, 246, 0.14);
   --color-info-subtle-text: #93c5fd;
   --color-warning: #f59e0b;
+  --color-warning-hover: #d97706;
   --color-warning-subtle: rgba(245, 158, 11, 0.14);
   --color-warning-subtle-text: #fcd34d;
   --color-rail: #081427;
@@ -36,14 +43,66 @@
   --color-rail-text: #94a3b8;
   --color-rail-text-active: #ffffff;
   --color-rail-hover: rgba(139, 92, 246, 0.1);
+  --shadow-float: 0 18px 48px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(148, 163, 184, 0.08);
+  --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06);
+
   --radius-xs: 5px;
   --radius-sm: 7px;
   --radius-md: 10px;
   --radius-lg: 14px;
-  --shadow-float: 0 18px 48px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(148, 163, 184, 0.08);
   --breakpoint-sm: 40rem;
   --breakpoint-md: 48rem;
   --breakpoint-lg: 64rem;
   --breakpoint-xl: 80rem;
   --breakpoint-2xl: 96rem;
+}
+
+/*
+ * Light mode — the same ledger under office daylight, not an inverted
+ * palette. Cool paper canvas (not warm cream, to keep the slate/violet
+ * identity), ink-navy text (not pure black), deeper semantic hues for
+ * AA contrast on white, and real shadows since borders alone read as
+ * washed-out on a light surface.
+ */
+:root[data-theme='light'] {
+  --color-canvas: #f2f4f9;
+  --color-surface: #ffffff;
+  --color-surface-inset: #eef1f8;
+  --color-surface-hover: #e7ebf5;
+  --color-border: rgba(15, 23, 42, 0.08);
+  --color-border-strong: rgba(15, 23, 42, 0.14);
+  --color-border-focus: #7c3aed;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-tertiary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-text-inverse: #ffffff;
+  --color-accent: #7c3aed;
+  --color-accent-hover: #6d28d9;
+  --color-accent-active: #5b21b6;
+  --color-accent-subtle: rgba(124, 58, 237, 0.1);
+  --color-accent-subtle-text: #6d28d9;
+  --color-success: #16a34a;
+  --color-success-hover: #15803d;
+  --color-success-subtle: rgba(22, 163, 74, 0.1);
+  --color-success-subtle-text: #15803d;
+  --color-danger: #e11d48;
+  --color-danger-hover: #be123c;
+  --color-danger-subtle: rgba(225, 29, 72, 0.1);
+  --color-danger-subtle-text: #be123c;
+  --color-info: #2563eb;
+  --color-info-hover: #1d4ed8;
+  --color-info-subtle: rgba(37, 99, 235, 0.1);
+  --color-info-subtle-text: #1d4ed8;
+  --color-warning: #b45309;
+  --color-warning-hover: #92400e;
+  --color-warning-subtle: rgba(217, 119, 6, 0.12);
+  --color-warning-subtle-text: #92400e;
+  --color-rail: #f2f4f9;
+  --color-rail-border: rgba(15, 23, 42, 0.08);
+  --color-rail-text: #64748b;
+  --color-rail-text-active: #0f172a;
+  --color-rail-hover: rgba(124, 58, 237, 0.08);
+  --shadow-float: 0 18px 40px rgba(15, 23, 42, 0.12), 0 1px 2px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.06);
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
