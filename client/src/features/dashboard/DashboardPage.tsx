@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { clsx } from 'clsx'
-import { ArrowRight, CheckCircle2, ClipboardList, Package, PackagePlus, Plus, Truck, Warehouse } from 'lucide-react'
+import { AlertTriangle, ArrowRight, CheckCircle2, Clock, ClipboardList, Package, PackagePlus, Plus, ShieldCheck, Truck, Warehouse } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { listInventory, listMovements } from '@/api/inventory'
 import { listProducts } from '@/api/products'
 import { useAuth } from '@/auth/useAuth'
 import { Badge } from '@/components/ui/Badge'
 import { Panel } from '@/components/ui/Panel'
+import { StatTile } from '@/components/ui/StatTile'
 import { ErrorState, LoadingRows } from '@/components/ui/States'
+import { stockState } from '@/components/ui/StockLevelBar'
 import { useOrderStatusCounts } from '@/features/dashboard/useOrderStatusCounts'
 import { formatDateTime } from '@/lib/format'
 import { MOVEMENT_TYPE_LABEL, MOVEMENT_TYPE_TONE, ORDER_STATUS_LABEL } from '@/lib/labels'
@@ -36,6 +38,8 @@ export function DashboardPage() {
 }
 
 function ManagementDashboard() {
+  const { hasRole } = useAuth()
+  const isAdmin = hasRole('Admin')
   const activeProducts = useQuery({ queryKey: ['dashboard-active-products'], queryFn: () => listProducts({ page: 1, pageSize: 1, includeInactive: false }) })
   const belowMinimum = useQuery({ queryKey: ['dashboard-below-minimum'], queryFn: () => listInventory({ page: 1, pageSize: 6, belowMinimumOnly: true }) })
   const recentMovements = useQuery({ queryKey: ['dashboard-recent-movements'], queryFn: () => listMovements({ page: 1, pageSize: 6 }) })
@@ -44,14 +48,38 @@ function ManagementDashboard() {
 
   if (hasError) return <Panel><ErrorState message="Não foi possível carregar os indicadores operacionais." onRetry={() => { activeProducts.refetch(); belowMinimum.refetch(); recentMovements.refetch(); orderCounts.retry() }} /></Panel>
 
+  const belowMinimumCount = belowMinimum.data?.totalCount ?? 0
+  const pendingCount = orderCounts.counts.Pending
+
   return (
     <div className="space-y-5">
       <OrderPipelineOverview counts={orderCounts.counts} loading={orderCounts.isLoading} />
-      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+
+      <Panel className="flex flex-wrap overflow-hidden">
+        <StatTile
+          label="Produtos ativos"
+          value={activeProducts.isLoading ? '—' : (activeProducts.data?.totalCount ?? 0)}
+          icon={<Package className="size-4" />}
+        />
+        <StatTile
+          label="Abaixo do mínimo"
+          value={belowMinimum.isLoading ? '—' : belowMinimumCount}
+          tone={belowMinimumCount > 0 ? 'warning' : 'neutral'}
+          icon={<AlertTriangle className="size-4" />}
+        />
+        <StatTile
+          label="Pedidos pendentes"
+          value={orderCounts.isLoading ? '—' : pendingCount}
+          tone={pendingCount > 0 ? 'warning' : 'neutral'}
+          icon={<Clock className="size-4" />}
+        />
+      </Panel>
+
+      <div className={clsx('grid gap-5', belowMinimumCount > 0 ? 'xl:grid-cols-[1.5fr_1fr]' : 'xl:grid-cols-[1fr_1fr]')}>
         <LowStock query={belowMinimum} />
         <RecentMovements query={recentMovements} />
       </div>
-      <QuickActions management activeProducts={activeProducts.data?.totalCount ?? 0} />
+      <QuickActions management admin={isAdmin} activeProducts={activeProducts.data?.totalCount ?? 0} />
     </div>
   )
 }
@@ -147,15 +175,16 @@ function RecentMovements({ query }: { query: ReturnType<typeof useQuery<Awaited<
 }
 
 function LowStock({ query }: { query: ReturnType<typeof useQuery<Awaited<ReturnType<typeof listInventory>>>> }) {
-  return <Panel className="overflow-hidden"><div className="flex items-center justify-between border-b border-border px-5 py-4"><SectionTitle title="Estoque abaixo do mínimo" description="Itens que exigem atenção" /><Link to="/inventory?belowMinimumOnly=true" className="text-[12px] font-semibold text-accent-subtle-text hover:text-accent">Ver estoque</Link></div>{query.isLoading ? <LoadingRows rows={5} columns={3} /> : query.data?.items.length ? <div className="overflow-x-auto"><table className="w-full min-w-[520px] text-left text-[12px]"><thead><tr className="border-b border-border text-[10px] uppercase tracking-[0.1em] text-text-muted"><th className="px-5 py-3 font-medium">Produto</th><th className="px-4 py-3 text-right font-medium">Disponível</th><th className="px-4 py-3 text-right font-medium">Mínimo</th><th className="px-5 py-3 text-right font-medium">Status</th></tr></thead><tbody className="divide-y divide-border">{query.data.items.map((item) => <tr key={item.productId} className="hover:bg-surface-hover"><td className="px-5 py-3"><p className="font-medium text-text-primary">{item.productName}</p><p className="font-mono text-[10px] text-text-muted">{item.sku}</p></td><td className="px-4 py-3 text-right tabular-nums text-text-secondary">{item.availableStock}</td><td className="px-4 py-3 text-right tabular-nums text-text-secondary">{item.minimumStock}</td><td className="px-5 py-3 text-right"><Badge tone={item.availableStock === 0 ? 'danger' : 'warning'}>{item.availableStock === 0 ? 'Crítico' : 'Atenção'}</Badge></td></tr>)}</tbody></table></div> : <div className="flex h-44 flex-col items-center justify-center"><CheckCircle2 className="mb-3 size-7 text-success" /><p className="text-[13px] font-medium text-text-secondary">Estoque em níveis adequados</p></div>}</Panel>
+  return <Panel className="overflow-hidden"><div className="flex items-center justify-between border-b border-border px-5 py-4"><SectionTitle title="Estoque abaixo do mínimo" description="Itens que exigem atenção" /><Link to="/inventory?belowMinimumOnly=true" className="text-[12px] font-semibold text-accent-subtle-text hover:text-accent">Ver estoque</Link></div>{query.isLoading ? <LoadingRows rows={5} columns={3} /> : query.data?.items.length ? <div className="overflow-x-auto"><table className="w-full min-w-[520px] text-left text-[12px]"><thead><tr className="border-b border-border text-[10px] uppercase tracking-[0.1em] text-text-muted"><th className="px-5 py-3 font-medium">Produto</th><th className="px-4 py-3 text-right font-medium">Disponível</th><th className="px-4 py-3 text-right font-medium">Mínimo</th><th className="px-5 py-3 text-right font-medium">Status</th></tr></thead><tbody className="divide-y divide-border">{query.data.items.map((item) => { const state = stockState(item.availableStock, item.minimumStock); return <tr key={item.productId} className="hover:bg-surface-hover"><td className="px-5 py-3"><p className="font-medium text-text-primary">{item.productName}</p><p className="font-mono text-[10px] text-text-muted">{item.sku}</p></td><td className="px-4 py-3 text-right tabular-nums text-text-secondary">{item.availableStock}</td><td className="px-4 py-3 text-right tabular-nums text-text-secondary">{item.minimumStock}</td><td className="px-5 py-3 text-right"><Badge tone={state === 'out' ? 'danger' : 'warning'}>{state === 'out' ? 'Crítico' : 'Atenção'}</Badge></td></tr> })}</tbody></table></div> : <div className="flex h-44 flex-col items-center justify-center"><CheckCircle2 className="mb-3 size-7 text-success" /><p className="text-[13px] font-medium text-text-secondary">Estoque em níveis adequados</p></div>}</Panel>
 }
 
-function QuickActions({ management = false, activeProducts = 0 }: { management?: boolean; activeProducts?: number }) {
+function QuickActions({ management = false, admin = false, activeProducts = 0 }: { management?: boolean; admin?: boolean; activeProducts?: number }) {
   const actions = management ? [
     { to: '/products/new', title: 'Novo produto', description: `${activeProducts} produtos ativos`, icon: Plus, color: 'text-accent bg-accent-subtle' },
     { to: '/inventory', title: 'Receber estoque', description: 'Registrar nova entrada', icon: Warehouse, color: 'text-info bg-info-subtle' },
     { to: '/suppliers', title: 'Novo fornecedor', description: 'Gerenciar parceiros', icon: Truck, color: 'text-success bg-success-subtle' },
     { to: '/orders', title: 'Ver pedidos', description: 'Acompanhar o fluxo', icon: ClipboardList, color: 'text-warning bg-warning-subtle' },
+    ...(admin ? [{ to: '/admin/users', title: 'Gerenciar usuários', description: 'Criar contas e definir papéis', icon: ShieldCheck, color: 'text-danger bg-danger-subtle' }] : []),
   ] : [
     { to: '/orders', title: 'Novo pedido', description: 'Criar e adicionar itens', icon: Plus, color: 'text-accent bg-accent-subtle' },
     { to: '/products', title: 'Ver produtos', description: 'Consultar catálogo e preços', icon: Package, color: 'text-info bg-info-subtle' },

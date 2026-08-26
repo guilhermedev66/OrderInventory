@@ -2,6 +2,8 @@ import { Menu, PanelLeftClose } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import { NAV_ITEMS } from '@/components/layout/navConfig'
 import { UserMenu } from '@/components/layout/UserMenu'
+import { CommandPalette } from '@/components/ui/CommandPalette'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 export function Topbar({ onMenuClick, onSidebarToggle }: { onMenuClick: () => void; onSidebarToggle: () => void }) {
   const { pathname } = useLocation()
@@ -14,7 +16,13 @@ export function Topbar({ onMenuClick, onSidebarToggle }: { onMenuClick: () => vo
         <div className="hidden h-5 w-px bg-border sm:block" />
         <span className="hidden text-[12px] font-medium text-text-tertiary sm:block">{current?.label ?? 'OrderInventory'}</span>
       </div>
-      <UserMenu />
+      <div className="flex items-center gap-3">
+        <CommandPalette />
+        <div className="h-5 w-px bg-border" />
+        <ThemeToggle />
+        <div className="h-5 w-px bg-border" />
+        <UserMenu />
+      </div>
     </header>
   )
 }

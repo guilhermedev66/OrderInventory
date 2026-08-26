@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { PackagePlus } from 'lucide-react'
+import { PackagePlus, Warehouse } from 'lucide-react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { listInventory } from '@/api/inventory'
@@ -10,6 +10,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { Panel } from '@/components/ui/Panel'
 import { StockLevelBar } from '@/components/ui/StockLevelBar'
 import { EmptyState, ErrorState, LoadingRows } from '@/components/ui/States'
+import { Table, TableScroll, Th, Thead } from '@/components/ui/Table'
 import { ReceiveStockDialog } from '@/features/inventory/ReceiveStockDialog'
 import { ApiError } from '@/lib/apiError'
 import type { InventoryBalance } from '@/types/api'
@@ -51,7 +52,7 @@ export function InventoryBalancesPage() {
       </div>
 
       <div className="p-6">
-        <Panel className="overflow-x-auto">
+        <Panel>
           {query.isLoading ? (
             <LoadingRows rows={8} columns={3} />
           ) : query.isError ? (
@@ -61,19 +62,19 @@ export function InventoryBalancesPage() {
             />
           ) : !query.data || query.data.items.length === 0 ? (
             <EmptyState
-              title="Nenhum item encontrado"
-              description={belowMinimumOnly ? 'Nenhum produto está abaixo do estoque mínimo.' : undefined}
+              icon={Warehouse}
+              title={belowMinimumOnly ? 'Nenhum item abaixo do mínimo' : 'Nenhum item encontrado'}
+              description={belowMinimumOnly ? 'O estoque está em níveis adequados no momento.' : undefined}
             />
           ) : (
             <>
-              <table className="min-w-[680px] w-full text-left text-[13px]">
-                <thead>
-                  <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-tertiary">
-                    <th className="px-4 py-2.5 font-medium">Produto</th>
-                    <th className="px-4 py-2.5 font-medium">Nível de estoque</th>
-                    <th className="px-4 py-2.5" />
-                  </tr>
-                </thead>
+              <TableScroll>
+              <Table minWidth={680}>
+                <Thead>
+                  <Th>Produto</Th>
+                  <Th>Nível de estoque</Th>
+                  <Th />
+                </Thead>
                 <tbody className="divide-y divide-border">
                   {query.data.items.map((item) => (
                     <tr key={item.productId} className="hover:bg-surface-hover">
@@ -98,7 +99,8 @@ export function InventoryBalancesPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </Table>
+              </TableScroll>
               <Pagination
                 page={query.data.page}
                 pageSize={query.data.pageSize}

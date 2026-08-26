@@ -1,4 +1,6 @@
 import { clsx } from 'clsx'
+import { Check, X } from 'lucide-react'
+import { formatDateTime } from '@/lib/format'
 import type { Order } from '@/types/api'
 
 const STEPS: { key: keyof Order; label: string }[] = [
@@ -10,56 +12,65 @@ const STEPS: { key: keyof Order; label: string }[] = [
 ]
 
 /**
- * Reconstructs progress purely from the order's own *AtUtc timestamps —
- * no separate status-to-step mapping to keep in sync with the backend's
- * state machine.
+ * A manifest strip, not a generic circle-stepper: each stage is a stamped
+ * rectangular ticket (same grammar as Badge — sharp radius, mono uppercase
+ * label) carrying its own timestamp, joined by a rail. Reconstructs progress
+ * purely from the order's own *AtUtc timestamps — no separate status-to-step
+ * mapping to keep in sync with the backend's state machine.
  */
 export function OrderStatusRail({ order }: { order: Order }) {
   const reachedCount = STEPS.filter((s) => Boolean(order[s.key])).length
   const isCancelled = order.status === 'Cancelled'
 
   return (
-    <div className="flex items-start">
-      {STEPS.map((step, i) => {
-        const done = i < reachedCount
-        const isCurrent = i === reachedCount - 1 && !isCancelled
-        const isLast = i === STEPS.length - 1
-        return (
-          <div key={step.key} className={clsx('flex items-center', !isLast && 'flex-1')}>
-            <div className="flex flex-col items-center gap-1.5">
+    <div className="overflow-x-auto">
+      <div className="flex min-w-max items-stretch">
+        {STEPS.map((step, i) => {
+          const done = i < reachedCount
+          const isCurrent = i === reachedCount - 1 && !isCancelled
+          const isLast = i === STEPS.length - 1 && !isCancelled
+          const timestamp = order[step.key] as string | null
+
+          return (
+            <div key={step.key} className={clsx('flex items-stretch', !isLast && 'flex-1')}>
               <div
                 className={clsx(
-                  'flex size-6 items-center justify-center rounded-full border text-[11px] font-semibold',
-                  done && !isCurrent && 'border-success bg-success text-white',
-                  isCurrent && 'border-accent bg-accent text-white',
-                  !done && 'border-border-strong bg-surface text-text-muted',
+                  'flex min-w-[128px] flex-col gap-1 rounded-[3px] border px-3 py-2',
+                  isCurrent && 'border-accent bg-accent text-white shadow-sm',
+                  done && !isCurrent && 'border-success/40 bg-success-subtle text-success-subtle-text',
+                  !done && 'border-dashed border-border-strong bg-surface text-text-muted',
                 )}
               >
-                {done && !isCurrent ? '✓' : i + 1}
+                <span className="flex items-center gap-1 font-mono text-[10px] font-semibold uppercase tracking-[0.05em]">
+                  {done && !isCurrent ? <Check className="size-3" aria-hidden="true" /> : null}
+                  {step.label}
+                </span>
+                <span className={clsx('text-[11px] tabular-nums', isCurrent ? 'text-white/85' : done ? 'text-success-subtle-text/80' : 'text-text-muted')}>
+                  {timestamp ? formatDateTime(timestamp) : '—'}
+                </span>
               </div>
-              <span
-                className={clsx(
-                  'whitespace-nowrap text-[11px]',
-                  done ? 'font-medium text-text-secondary' : 'text-text-muted',
-                )}
-              >
-                {step.label}
+              {!isLast ? (
+                <div className={clsx('mt-[19px] h-px flex-1 self-start', done ? 'bg-success/50' : 'bg-border-strong')} />
+              ) : null}
+            </div>
+          )
+        })}
+
+        {isCancelled ? (
+          <>
+            <div className="mt-[19px] h-px w-6 self-start bg-danger/50" />
+            <div className="flex min-w-[128px] flex-col gap-1 rounded-[3px] border border-danger/40 bg-danger-subtle px-3 py-2 text-danger-subtle-text">
+              <span className="flex items-center gap-1 font-mono text-[10px] font-semibold uppercase tracking-[0.05em]">
+                <X className="size-3" aria-hidden="true" />
+                Cancelado
+              </span>
+              <span className="text-[11px] tabular-nums text-danger-subtle-text/80">
+                {order.cancelledAtUtc ? formatDateTime(order.cancelledAtUtc) : '—'}
               </span>
             </div>
-            {!isLast ? (
-              <div className={clsx('mx-1.5 h-px flex-1 self-start mt-3', done ? 'bg-success' : 'bg-border-strong')} />
-            ) : null}
-          </div>
-        )
-      })}
-      {isCancelled ? (
-        <div className="ml-3 flex flex-col items-center gap-1.5">
-          <div className="flex size-6 items-center justify-center rounded-full border border-danger bg-danger text-[11px] font-semibold text-white">
-            ✕
-          </div>
-          <span className="whitespace-nowrap text-[11px] font-medium text-danger-subtle-text">Cancelado</span>
-        </div>
-      ) : null}
+          </>
+        ) : null}
+      </div>
     </div>
   )
 }

@@ -27,7 +27,7 @@ export function Badge({ tone = 'neutral', children }: { tone?: Tone; children: R
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1.5 rounded-[3px] border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase leading-4 tracking-[0.05em]',
+        'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[3px] border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase leading-4 tracking-[0.05em]',
         toneClasses[tone],
       )}
     >

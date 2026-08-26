@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import { Inbox, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
@@ -24,14 +24,16 @@ export function EmptyState({
   title,
   description,
   action,
+  icon: Icon = Inbox,
 }: {
   title: string
   description?: string
   action?: ReactNode
+  icon?: ComponentType<{ className?: string }>
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-14 text-center">
-      <span className="mb-2 flex size-11 items-center justify-center rounded-md border border-border bg-surface-inset text-text-tertiary"><Inbox className="size-5" /></span>
+      <span className="mb-2 flex size-11 items-center justify-center rounded-md border border-border bg-surface-inset text-text-tertiary"><Icon className="size-5" /></span>
       <p className="text-sm font-medium text-text-primary">{title}</p>
       {description ? <p className="max-w-sm text-[13px] text-text-tertiary">{description}</p> : null}
       {action ? <div className="mt-2">{action}</div> : null}

@@ -18,6 +18,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { OrderStatusRail } from '@/components/ui/OrderStatusRail'
 import { Panel } from '@/components/ui/Panel'
 import { ErrorState } from '@/components/ui/States'
+import { Table, TableScroll, Th, Thead } from '@/components/ui/Table'
 import { useToast } from '@/components/ui/useToast'
 import { AddItemDialog } from '@/features/orders/AddItemDialog'
 import { getOrderPermissions } from '@/features/orders/orderPermissions'
@@ -140,11 +141,11 @@ export function OrderDetailPage() {
       />
 
       <div className="flex flex-col gap-6 p-6">
-        <Panel className="overflow-x-auto p-5">
+        <Panel className="p-5">
           <OrderStatusRail order={order} />
         </Panel>
 
-        <Panel className="overflow-x-auto">
+        <Panel>
           <div className="border-b border-border px-4 py-3">
             <h2 className="text-[13px] font-semibold text-text-primary">Itens</h2>
           </div>
@@ -153,18 +154,17 @@ export function OrderDetailPage() {
               {canAddItem ? 'Nenhum item ainda. Adicione produtos para enviar o pedido.' : 'Nenhum item neste pedido.'}
             </p>
           ) : (
-            <table className="min-w-[620px] w-full text-left text-[13px]">
-              <thead>
-                <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-tertiary">
-                  <th className="px-4 py-2.5 font-medium">Produto</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Qtd.</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Preço unit.</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Total</th>
-                </tr>
-              </thead>
+            <TableScroll>
+            <Table minWidth={620}>
+              <Thead>
+                <Th>Produto</Th>
+                <Th align="right">Qtd.</Th>
+                <Th align="right">Preço unit.</Th>
+                <Th align="right">Total</Th>
+              </Thead>
               <tbody className="divide-y divide-border">
                 {order.items.map((item) => (
-                  <tr key={item.id}>
+                  <tr key={item.id} className="hover:bg-surface-hover">
                     <td className="px-4 py-2.5">
                       <p className="font-medium text-text-primary">{item.productName}</p>
                       <p className="font-mono text-[11px] text-text-muted">{item.sku}</p>
@@ -189,19 +189,9 @@ export function OrderDetailPage() {
                   </td>
                 </tr>
               </tfoot>
-            </table>
+            </Table>
+            </TableScroll>
           )}
-        </Panel>
-
-        <Panel className="p-5">
-          <h2 className="text-[13px] font-semibold text-text-primary">Linha do tempo</h2>
-          <dl className="mt-3 grid grid-cols-2 gap-3 text-[13px] sm:grid-cols-3">
-            <Timestamp label="Enviado" value={order.submittedAtUtc} />
-            <Timestamp label="Confirmado" value={order.confirmedAtUtc} />
-            <Timestamp label="Em processamento" value={order.processingAtUtc} />
-            <Timestamp label="Concluído" value={order.completedAtUtc} />
-            <Timestamp label="Cancelado" value={order.cancelledAtUtc} />
-          </dl>
         </Panel>
       </div>
 
@@ -253,15 +243,6 @@ export function OrderDetailPage() {
         onConfirm={() => completeMutation.mutate()}
         onCancel={() => setDialog(null)}
       />
-    </div>
-  )
-}
-
-function Timestamp({ label, value }: { label: string; value: string | null }) {
-  return (
-    <div>
-      <dt className="text-text-tertiary">{label}</dt>
-      <dd className="mt-0.5 text-text-secondary">{value ? formatDateTime(value) : <span className="text-text-muted">—</span>}</dd>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
+import { Package, Plus } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { listProducts } from '@/api/products'
 import { useAuth } from '@/auth/useAuth'
@@ -10,7 +10,9 @@ import { LinkButton } from '@/components/ui/LinkButton'
 import { Pagination } from '@/components/ui/Pagination'
 import { Panel } from '@/components/ui/Panel'
 import { SearchInput } from '@/components/ui/SearchInput'
+import { stockState } from '@/components/ui/StockLevelBar'
 import { EmptyState, ErrorState, LoadingRows } from '@/components/ui/States'
+import { Table, TableScroll, Th, Thead } from '@/components/ui/Table'
 import { ApiError } from '@/lib/apiError'
 import { formatCurrency } from '@/lib/format'
 
@@ -73,7 +75,7 @@ export function ProductsListPage() {
       </div>
 
       <div className="p-6">
-        <Panel className="overflow-x-auto">
+        <Panel>
           {query.isLoading ? (
             <LoadingRows rows={8} columns={5} />
           ) : query.isError ? (
@@ -83,24 +85,32 @@ export function ProductsListPage() {
             />
           ) : !query.data || query.data.items.length === 0 ? (
             <EmptyState
-              title="Nenhum produto encontrado"
+              icon={Package}
+              title={search ? 'Nenhum produto encontrado' : 'Nenhum produto cadastrado'}
               description={search ? 'Ajuste a busca ou os filtros.' : 'Cadastre o primeiro produto do catálogo.'}
+              action={
+                isManagement && !search ? (
+                  <LinkButton to="/products/new" variant="secondary" size="sm">
+                    <Plus className="size-3.5" />
+                    Novo produto
+                  </LinkButton>
+                ) : undefined
+              }
             />
           ) : (
             <>
-              <table className="min-w-[720px] w-full text-left text-[13px]">
-                <thead>
-                  <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-tertiary">
-                    <th className="px-4 py-2.5 font-medium">Produto</th>
-                    <th className="px-4 py-2.5 font-medium">SKU</th>
-                    <th className="px-4 py-2.5 text-right font-medium">Preço</th>
-                    <th className="px-4 py-2.5 text-right font-medium">Disponível</th>
-                    <th className="px-4 py-2.5 font-medium">Status</th>
-                  </tr>
-                </thead>
+              <TableScroll>
+              <Table minWidth={720}>
+                <Thead>
+                  <Th>Produto</Th>
+                  <Th>SKU</Th>
+                  <Th align="right">Preço</Th>
+                  <Th align="right">Disponível</Th>
+                  <Th>Status</Th>
+                </Thead>
                 <tbody className="divide-y divide-border">
                   {query.data.items.map((product) => {
-                    const belowMinimum = product.availableStock < product.minimumStock
+                    const state = stockState(product.availableStock, product.minimumStock)
                     return (
                       <tr
                         key={product.id}
@@ -122,9 +132,9 @@ export function ProductsListPage() {
                         <td className="px-4 py-2.5">
                           <div className="flex gap-1.5">
                             {!product.isActive ? <Badge tone="neutral">Inativo</Badge> : null}
-                            {product.availableStock === 0 ? (
+                            {state === 'out' ? (
                               <Badge tone="danger">Sem estoque</Badge>
-                            ) : belowMinimum ? (
+                            ) : state === 'low' ? (
                               <Badge tone="warning">Abaixo do mínimo</Badge>
                             ) : null}
                           </div>
@@ -133,7 +143,8 @@ export function ProductsListPage() {
                     )
                   })}
                 </tbody>
-              </table>
+              </Table>
+              </TableScroll>
               <Pagination
                 page={query.data.page}
                 pageSize={query.data.pageSize}

@@ -21,7 +21,7 @@ export function StatTile({
           className={clsx(
             'mt-0.5 text-[22px] font-semibold leading-none tabular-nums',
             tone === 'danger' && 'text-danger',
-            tone === 'warning' && 'text-accent',
+            tone === 'warning' && 'text-warning',
             tone === 'neutral' && 'text-text-primary',
           )}
         >

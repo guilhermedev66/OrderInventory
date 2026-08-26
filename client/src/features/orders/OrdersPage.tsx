@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { clsx } from 'clsx'
-import { Plus } from 'lucide-react'
+import { ClipboardList, Plus } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { createOrder, listManagementOrders, listMyOrders } from '@/api/orders'
 import { useAuth } from '@/auth/useAuth'
@@ -11,6 +11,7 @@ import { selectControlClasses, SelectChevron } from '@/components/ui/Field'
 import { Pagination } from '@/components/ui/Pagination'
 import { Panel } from '@/components/ui/Panel'
 import { EmptyState, ErrorState, LoadingRows } from '@/components/ui/States'
+import { Table, TableScroll, Th, Thead } from '@/components/ui/Table'
 import { useToast } from '@/components/ui/useToast'
 import { ApiError } from '@/lib/apiError'
 import { formatCurrency, formatDateTime } from '@/lib/format'
@@ -103,7 +104,7 @@ export function OrdersPage() {
       </div>
 
       <div className="p-6">
-        <Panel className="overflow-x-auto">
+        <Panel>
           {query.isLoading ? (
             <LoadingRows rows={8} columns={5} />
           ) : query.isError ? (
@@ -113,21 +114,33 @@ export function OrdersPage() {
             />
           ) : !query.data || query.data.items.length === 0 ? (
             <EmptyState
-              title="Nenhum pedido encontrado"
-              description={!isManagement ? 'Crie um novo pedido para começar.' : undefined}
+              icon={ClipboardList}
+              title={status ? `Nenhum pedido ${ORDER_STATUS_LABEL[status].toLowerCase()}` : 'Nenhum pedido ainda'}
+              description={
+                !isManagement
+                  ? 'Crie um novo pedido para começar a acompanhar o andamento aqui.'
+                  : 'Novos pedidos enviados pelos clientes aparecerão aqui.'
+              }
+              action={
+                !isManagement ? (
+                  <Button variant="secondary" size="sm" loading={createMutation.isPending} onClick={() => createMutation.mutate()}>
+                    <Plus className="size-3.5" />
+                    Novo pedido
+                  </Button>
+                ) : undefined
+              }
             />
           ) : (
             <>
-              <table className="min-w-[700px] w-full text-left text-[13px]">
-                <thead>
-                  <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-tertiary">
-                    <th className="px-4 py-2.5 font-medium">Pedido</th>
-                    <th className="px-4 py-2.5 font-medium">Status</th>
-                    <th className="px-4 py-2.5 text-right font-medium">Itens</th>
-                    <th className="px-4 py-2.5 text-right font-medium">Total</th>
-                    <th className="px-4 py-2.5 font-medium">Atualizado em</th>
-                  </tr>
-                </thead>
+              <TableScroll>
+              <Table minWidth={700}>
+                <Thead>
+                  <Th>Pedido</Th>
+                  <Th>Status</Th>
+                  <Th align="right">Itens</Th>
+                  <Th align="right">Total</Th>
+                  <Th>Atualizado em</Th>
+                </Thead>
                 <tbody className="divide-y divide-border">
                   {query.data.items.map((order) => (
                     <tr
@@ -155,7 +168,8 @@ export function OrdersPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </Table>
+              </TableScroll>
               <Pagination
                 page={query.data.page}
                 pageSize={query.data.pageSize}

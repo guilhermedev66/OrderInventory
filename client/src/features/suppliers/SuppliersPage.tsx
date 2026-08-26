@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link2, Plus } from 'lucide-react'
+import { Link2, Plus, Truck } from 'lucide-react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { listSuppliers, setSupplierStatus } from '@/api/suppliers'
@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/Checkbox'
 import { Pagination } from '@/components/ui/Pagination'
 import { Panel } from '@/components/ui/Panel'
 import { EmptyState, ErrorState, LoadingRows } from '@/components/ui/States'
+import { Table, TableScroll, Th, Thead } from '@/components/ui/Table'
 import { useToast } from '@/components/ui/useToast'
 import { CreateSupplierDialog } from '@/features/suppliers/CreateSupplierDialog'
 import { LinkProductDialog } from '@/features/suppliers/LinkProductDialog'
@@ -75,7 +76,7 @@ export function SuppliersPage() {
       </div>
 
       <div className="p-6">
-        <Panel className="overflow-x-auto">
+        <Panel>
           {query.isLoading ? (
             <LoadingRows rows={6} columns={4} />
           ) : query.isError ? (
@@ -84,19 +85,28 @@ export function SuppliersPage() {
               onRetry={() => query.refetch()}
             />
           ) : !query.data || query.data.items.length === 0 ? (
-            <EmptyState title="Nenhum fornecedor cadastrado" />
+            <EmptyState
+              icon={Truck}
+              title="Nenhum fornecedor cadastrado"
+              description="Cadastre o primeiro fornecedor para vincular a produtos e registrar recebimentos."
+              action={
+                <Button variant="secondary" size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="size-3.5" />
+                  Novo fornecedor
+                </Button>
+              }
+            />
           ) : (
             <>
-              <table className="min-w-[780px] w-full text-left text-[13px]">
-                <thead>
-                  <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-tertiary">
-                    <th className="px-4 py-2.5 font-medium">Nome</th>
-                    <th className="px-4 py-2.5 font-medium">Contato</th>
-                    <th className="px-4 py-2.5 font-medium">Status</th>
-                    <th className="px-4 py-2.5 font-medium">Desde</th>
-                    <th className="px-4 py-2.5" />
-                  </tr>
-                </thead>
+              <TableScroll>
+              <Table minWidth={780}>
+                <Thead>
+                  <Th>Nome</Th>
+                  <Th>Contato</Th>
+                  <Th>Status</Th>
+                  <Th>Desde</Th>
+                  <Th />
+                </Thead>
                 <tbody className="divide-y divide-border">
                   {query.data.items.map((supplier) => (
                     <tr key={supplier.id} className="hover:bg-surface-hover">
@@ -128,7 +138,8 @@ export function SuppliersPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </Table>
+              </TableScroll>
               <Pagination
                 page={query.data.page}
                 pageSize={query.data.pageSize}
