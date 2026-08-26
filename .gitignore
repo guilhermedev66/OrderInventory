@@ -4,6 +4,7 @@
 .nuget/
 .vs/
 .vscode/
+.idea/
 *.user
 *.suo
 .env
@@ -11,4 +12,3 @@
 !.env.example
 TestResults/
 coverage/
-

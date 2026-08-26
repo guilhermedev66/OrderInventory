@@ -1,66 +1,171 @@
+<div align="center">
+
 # OrderInventory
 
-Sistema de gerenciamento de catálogo, pedidos e estoque para demonstrar consistência transacional em um cenário empresarial sem transformar o projeto em um ERP.
+**Gestão de catálogo, fornecedores, pedidos e estoque com consistência transacional.**
 
-> **Status:** Active development — core functionality complete, UI/UX refinement in progress. O deploy público será realizado posteriormente.
+Um sistema full stack para operações de inventário, construído como monólito modular e focado em regras de negócio reais: reservas concorrentes, rastreabilidade de movimentações, autorização por perfil e proteção de invariantes no PostgreSQL.
 
-## Arquitetura e stack
+**Status: Development complete — public deployment pending**
 
-Monólito modular em .NET 10, ASP.NET Core, Entity Framework Core e PostgreSQL:
+[![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![React](https://img.shields.io/badge/React-19-20232A?logo=react&logoColor=61DAFB)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![CI](https://github.com/guilhermedev66/OrderInventory/actions/workflows/ci.yml/badge.svg)](https://github.com/guilhermedev66/OrderInventory/actions/workflows/ci.yml)
 
-- `OrderInventory.Api`: API REST, DTOs, autenticação JWT, autorização e composição.
-- `OrderInventory.Core`: produtos, fornecedores, estoque e pedidos, sem dependência da infraestrutura.
+</div>
+
+## Preview
+
+| Dashboard — light mode | Dashboard — dark mode |
+| --- | --- |
+| ![Dashboard do OrderInventory em tema claro](docs/images/dashboard-light.png) | ![Dashboard do OrderInventory em tema escuro](docs/images/dashboard-dark.png) |
+
+![Tela operacional de estoque do OrderInventory](docs/images/inventory-dark.png)
+
+> As imagens usam dados fictícios gerados exclusivamente para validação do projeto.
+
+## O problema que o projeto resolve
+
+Operações de estoque parecem simples até pedidos simultâneos disputarem as últimas unidades. O OrderInventory centraliza catálogo, fornecedores, saldos, movimentações e pedidos sem tratar consistência como responsabilidade exclusiva da interface.
+
+O resultado é um fluxo operacional completo, com regras verificadas no domínio, transações na aplicação e invariantes protegidas também pelo banco de dados.
+
+## Principais funcionalidades
+
+- Dashboard operacional com indicadores, alertas de estoque e movimentações recentes.
+- Catálogo de produtos com SKU único, preço histórico nos pedidos e ativação/inativação.
+- Gestão de fornecedores e vínculo entre fornecedor e produto.
+- Recebimento, reserva, liberação e atendimento de estoque com trilha auditável.
+- Pedidos com lifecycle controlado e operações administrativas por perfil.
+- Autenticação JWT com roles `User`, `Manager` e `Admin`.
+- Interface responsiva, temas claro/escuro, command palette, dialogs e estados de loading/empty/error.
+- API documentada por OpenAPI/Swagger e monitorada por health check.
+
+## Arquitetura
+
+O backend é um monólito modular em .NET 10:
+
+```text
+OrderInventory.Api ──────────────┐
+        │                        │
+        v                        v
+OrderInventory.Core    OrderInventory.Infrastructure
+                                 │
+                                 v
+                            PostgreSQL 18
+
+client (React/TypeScript) ──HTTP/JWT──> OrderInventory.Api
+```
+
+- `OrderInventory.Api`: API REST, DTOs, autenticação, autorização, erros e composição.
+- `OrderInventory.Core`: entidades e invariantes de produtos, fornecedores, estoque e pedidos.
 - `OrderInventory.Infrastructure`: EF Core, migrations e operações SQL transacionais.
-- `OrderInventory.UnitTests`: invariantes e transições do domínio.
-- `OrderInventory.IntegrationTests`: API, persistência e concorrência com PostgreSQL real via Testcontainers.
-- `client`: painel React/TypeScript com autenticação, controle visual por perfil e integração com a API.
+- `OrderInventory.UnitTests`: regras e transições do domínio.
+- `OrderInventory.IntegrationTests`: API, persistência, concorrência e PostgreSQL real via Testcontainers.
+- `client`: painel operacional React integrado aos contratos reais da API.
 
-As dependências seguem `Api -> Core`, `Api -> Infrastructure` e `Infrastructure -> Core`. Não são usados MediatR, CQRS, mensageria nem repositório genérico.
+As dependências seguem `Api -> Core`, `Api -> Infrastructure` e `Infrastructure -> Core`. O projeto evita complexidade sem necessidade: não usa microsserviços, mensageria, CQRS, MediatR ou repositório genérico.
 
-## Domínio e consistência
+## Stack
 
-O catálogo separa os dados comerciais do produto do seu saldo. O SKU é único, preços usam `numeric(18,2)`, produtos podem ser inativados e fornecedores podem ser associados a produtos e recebimentos.
+| Área | Tecnologias |
+| --- | --- |
+| Backend | .NET 10, ASP.NET Core, C# |
+| Persistência | Entity Framework Core, Npgsql, PostgreSQL 18 |
+| Segurança | ASP.NET Core Identity, JWT Bearer, roles e rate limiting |
+| Frontend | React 19, TypeScript, Vite, TanStack Query, React Hook Form, Zod |
+| Testes | xUnit, Testcontainers, Vitest, Testing Library, Playwright |
+| Infraestrutura | Docker, Docker Compose, GitHub Actions |
 
-O modelo de estoque é `AvailableStock = OnHandStock - ReservedStock`.
+## Estoque e concorrência
 
-O PostgreSQL aplica constraints para impedir saldos negativos e `ReservedStock > OnHandStock`. Recebimento, reserva, liberação e atendimento alteram o saldo com SQL atômico condicionado e registram uma movimentação na mesma transação. Movimentações são append-only, protegidas pelo contexto EF e por trigger contra `UPDATE` e `DELETE`.
+O saldo disponível é sempre derivado:
 
-Pedidos seguem `Draft -> Pending -> Confirmed -> Processing -> Completed`; `Draft`, `Pending` e `Confirmed` podem ser cancelados. A confirmação reserva todos os itens em ordem determinística ou faz rollback integral. O cancelamento libera exatamente a reserva do pedido e a conclusão consome estoque físico e reservado. O preço unitário é capturado no item e permanece histórico.
+```text
+AvailableStock = OnHandStock - ReservedStock
+```
 
-## Autenticação e API
+`AvailableStock` não é um terceiro saldo mutável. Essa decisão elimina sincronização duplicada e mantém uma única fonte de verdade para estoque físico e reservado.
 
-ASP.NET Core Identity armazena hashes de senha e aplica política mínima, lockout e email único. JWTs possuem issuer, audience, expiração e roles `User`, `Manager` e `Admin`.
+O PostgreSQL protege as invariantes mesmo se uma operação escapar das validações de aplicação:
 
-- `User`: catálogo público e criação, consulta e cancelamento dos próprios pedidos.
-- `Manager`: produtos, fornecedores, recebimentos, estoque e operações de pedidos.
+```text
+on_hand_stock >= 0
+reserved_stock >= 0
+reserved_stock <= on_hand_stock
+```
+
+Reservas utilizam atualização SQL atômica e transacional, condicionada à disponibilidade. Um teste de integração executa duas reservas concorrentes pelas últimas unidades: apenas uma prossegue, impedindo overselling.
+
+Cada alteração gera uma `StockMovement` na mesma transação. O histórico é append-only, com proteção no contexto EF e trigger no PostgreSQL contra `UPDATE` e `DELETE`, preservando rastreabilidade.
+
+## Pedidos e consistência transacional
+
+O lifecycle principal é:
+
+```text
+Draft -> Pending -> Confirmed -> Processing -> Completed
+```
+
+Pedidos podem ser cancelados apenas nos estados permitidos. A confirmação processa produtos em ordem determinística, reserva todos os itens ou faz rollback integral. Se qualquer item de uma operação com múltiplos produtos falhar, nenhuma reserva parcial permanece. Cancelamento libera exatamente as reservas daquele pedido e conclusão consome os saldos físico e reservado.
+
+## Autenticação e autorização
+
+- ASP.NET Core Identity para usuários, política de senha, lockout e hashes.
+- JWT com issuer, audience, expiração, assinatura e roles validados.
+- `User`: catálogo e gerenciamento dos próprios pedidos.
+- `Manager`: catálogo operacional, fornecedores, estoque e lifecycle de pedidos.
 - `Admin`: permissões de gestão e criação administrativa de usuários.
+- Ownership derivado do `sub` autenticado; pedidos de outro usuário retornam `404`, reduzindo enumeração e protegendo contra IDOR.
+- Rate limiting por endereço remoto nos endpoints de registro e login.
+- DTOs explícitos evitam exposição direta de entidades e mass assignment acidental.
+- Respostas de erro seguem `ProblemDetails`; falhas de login são genéricas.
 
-Consultas e ações comuns sobre pedidos filtram por `CustomerId` derivado do `sub` autenticado. Um ID de outro usuário retorna `404`, evitando acesso indevido e enumeração direta. Login usa resposta genérica e os endpoints de autenticação têm limite de requisições.
+## Frontend operacional
 
-Rotas principais:
+O painel oferece uma experiência de produto completa para dashboard, produtos, fornecedores, estoque, movimentações, pedidos e administração. A navegação e as ações são adaptadas ao perfil autenticado, enquanto a autorização efetiva permanece no backend.
 
-- `/api/auth`: registro e login.
-- `/api/products`: catálogo e gestão de produtos.
-- `/api/suppliers`: fornecedores e associação com produtos.
-- `/api/inventory`: saldos, recebimentos e movimentações.
-- `/api/orders`: pedidos próprios e operações de gestão.
-- `/api/admin/users`: criação de usuários e atribuição de perfil pelo administrador.
-- `/openapi/v1.json`, `/swagger` em Development, e `/health`.
+A interface usa React e TypeScript, possui responsividade, temas claro/escuro, tabelas operacionais, timeline de pedidos, command palette, feedback por toast e estados explícitos de carregamento, ausência de dados e erro. A integração E2E exercita a API e o PostgreSQL reais, do login ao recebimento e à conclusão de um pedido.
 
-Erros de validação e negócio seguem `ProblemDetails`. Listagens usam `page`, `pageSize` e filtros pertinentes. Entidades EF não são expostas diretamente.
+## Testes
+
+```powershell
+dotnet restore OrderInventory.slnx
+dotnet build OrderInventory.slnx --configuration Release --no-restore
+dotnet test OrderInventory.slnx --configuration Release --no-build
+
+Set-Location client
+npm ci
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+A validação final local inclui:
+
+- 18 testes unitários do backend.
+- 13 testes de integração com PostgreSQL real via Testcontainers.
+- 20 testes do frontend com Vitest e Testing Library.
+- 1 fluxo Playwright E2E completo contra API e banco reais.
+
+Consulte [client/README.md](client/README.md) para configurar o administrador usado pelo E2E.
 
 ## Execução local com Docker
 
-Requer Docker. Copie o arquivo de exemplo, altere todos os valores e inicie:
+Pré-requisitos: Docker Desktop e Node.js 24 ou versão compatível com o lockfile.
 
 ```powershell
 Copy-Item .env.example .env
+# Substitua todos os valores de exemplo antes de iniciar.
 docker compose up --build
 ```
 
-A API fica em `http://localhost:8080`, o Swagger em `http://localhost:8080/swagger` e o health check em `http://localhost:8080/health`. As migrations são aplicadas na inicialização. `BOOTSTRAP_ADMIN_EMAIL` e `BOOTSTRAP_ADMIN_PASSWORD` são opcionais para o primeiro administrador e devem ser removidos do `.env` após sua criação.
+A API fica em `http://localhost:8080`, o Swagger em `http://localhost:8080/swagger` e o health check em `http://localhost:8080/health`. As migrations são aplicadas na inicialização. O volume usa o caminho correto do PostgreSQL 18, `/var/lib/postgresql`.
 
-Para iniciar o frontend em outro terminal:
+Em outro terminal:
 
 ```powershell
 Set-Location client
@@ -69,32 +174,34 @@ npm ci
 npm run dev
 ```
 
-O painel fica em `http://localhost:5173`. Consulte `client/README.md` para os gates frontend e o roteiro E2E real.
+O frontend fica em `http://localhost:5173`. Arquivos `.env`, strings de conexão, chaves JWT e credenciais de bootstrap não devem ser versionados. Em ambiente publicado, configure origins explícitas e forneça secrets pelo serviço de hospedagem.
 
-Sem Compose, configure ao menos:
+## CI
 
-```powershell
-$env:ConnectionStrings__OrderInventory="Host=localhost;Port=5432;Database=order_inventory;Username=<usuario>;Password=<senha>"
-$env:Jwt__SigningKey="<segredo-aleatorio-com-ao-menos-32-bytes>"
-dotnet run --project src/OrderInventory.Api
-```
+O workflow do GitHub Actions executa em cada push para `main` e em pull requests:
 
-Não versione `.env`, strings de conexão ou chaves JWT. Em produção, configure `AllowedOrigins` explicitamente e use um gerenciador de segredos.
+- Backend: restore, build Release e testes.
+- Frontend: `npm ci`, lint, typecheck, testes e build.
 
-## Testes e CI
+Os testes de integração usam Docker no runner para iniciar PostgreSQL descartável via Testcontainers.
 
-Os testes de integração iniciam containers PostgreSQL descartáveis e isolados:
+## Decisões e trade-offs
 
-```powershell
-dotnet restore OrderInventory.slnx
-dotnet build OrderInventory.slnx --no-restore
-dotnet test OrderInventory.slnx --no-build
-```
+- Migrations automáticas simplificam desenvolvimento e uma única instância; múltiplas réplicas devem aplicá-las em uma etapa exclusiva de release.
+- JWTs são access tokens curtos sem refresh token neste escopo. Revogação imediata exigiria estado adicional.
+- A associação de fornecedores registra a origem dos recebimentos, sem expandir o produto para compras, notas fiscais ou contas a pagar.
+- Swagger UI fica disponível em `Development`; o documento OpenAPI continua acessível para integração.
 
-A GitHub Action executa restore, build Release e todas as suítes do backend, além de lint, typecheck, testes e build do frontend. O runner hospedado fornece o Docker usado pelo Testcontainers.
+## AI-assisted development
 
-## Trade-offs
+Ferramentas de IA apoiaram implementação, revisão de código, testes, debugging e exploração/refinamento de UI/UX. No frontend, a participação foi especialmente relevante na exploração visual e na implementação da interface. As decisões técnicas foram confrontadas com o código real, e os fluxos críticos foram validados por builds, testes automatizados, PostgreSQL real e inspeção visual — o projeto não depende de código gerado sem revisão.
 
-- Migrations automáticas simplificam uma única instância e o ambiente local; deployments com múltiplas réplicas devem executá-las como etapa exclusiva antes de liberar a aplicação.
-- JWTs são access tokens curtos sem refresh token neste escopo. Revogação imediata exigiria estado adicional e não foi introduzida sem necessidade.
-- A relação com fornecedores registra origem de recebimentos, mas não modela compras, notas ou contas a pagar.
+## Deploy
+
+O desenvolvimento está concluído e o deploy público é a próxima etapa. URLs de frontend, API e Swagger serão adicionadas somente após cada serviço estar publicado e validado.
+
+## Autor
+
+Desenvolvido por [Guilherme Santos da Silva](https://github.com/guilhermedev66).
+
+Repositório: [github.com/guilhermedev66/OrderInventory](https://github.com/guilhermedev66/OrderInventory)
