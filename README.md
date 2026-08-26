@@ -2,6 +2,8 @@
 
 Sistema de gerenciamento de catálogo, pedidos e estoque para demonstrar consistência transacional em um cenário empresarial sem transformar o projeto em um ERP.
 
+> **Status:** Active development — core functionality complete, UI/UX refinement in progress. O deploy público será realizado posteriormente.
+
 ## Arquitetura e stack
 
 Monólito modular em .NET 10, ASP.NET Core, Entity Framework Core e PostgreSQL:
