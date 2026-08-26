@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, CheckCircle2, CircleDashed, ClipboardCheck, ClipboardList, Package, PackagePlus, Plus, Truck, Warehouse } from 'lucide-react'
+import { clsx } from 'clsx'
+import { ArrowRight, CheckCircle2, ClipboardList, Package, PackagePlus, Plus, Truck, Warehouse } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { listInventory, listMovements } from '@/api/inventory'
 import { listProducts } from '@/api/products'
@@ -12,9 +13,9 @@ import { formatDateTime } from '@/lib/format'
 import { MOVEMENT_TYPE_LABEL, MOVEMENT_TYPE_TONE, ORDER_STATUS_LABEL } from '@/lib/labels'
 import type { OrderStatus } from '@/types/api'
 
-const DISTRIBUTION_STATUSES: OrderStatus[] = ['Pending', 'Confirmed', 'Processing', 'Completed', 'Cancelled']
+const FLOW_STATUSES: OrderStatus[] = ['Draft', 'Pending', 'Confirmed', 'Processing', 'Completed']
 const STATUS_COLORS: Record<OrderStatus, string> = {
-  Draft: '#64748b', Pending: '#f59e0b', Confirmed: '#3b82f6', Processing: '#8b5cf6', Completed: '#22c55e', Cancelled: '#f43f5e',
+  Draft: '#64748b', Pending: '#f0a323', Confirmed: '#3b82f6', Processing: '#8b5cf6', Completed: '#2fb787', Cancelled: '#e5484d',
 }
 
 export function DashboardPage() {
@@ -45,15 +46,12 @@ function ManagementDashboard() {
 
   return (
     <div className="space-y-5">
-      <MetricGrid counts={orderCounts.counts} loading={orderCounts.isLoading} />
-      <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-        <OrderDistribution counts={orderCounts.counts} loading={orderCounts.isLoading} />
-        <RecentMovements query={recentMovements} />
-      </div>
+      <OrderPipelineOverview counts={orderCounts.counts} loading={orderCounts.isLoading} />
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <LowStock query={belowMinimum} />
-        <QuickActions management activeProducts={activeProducts.data?.totalCount ?? 0} />
+        <RecentMovements query={recentMovements} />
       </div>
+      <QuickActions management activeProducts={activeProducts.data?.totalCount ?? 0} />
     </div>
   )
 }
@@ -63,55 +61,82 @@ function UserDashboard() {
   if (orderCounts.isError) return <Panel><ErrorState message="Não foi possível carregar o resumo dos pedidos." onRetry={() => orderCounts.retry()} /></Panel>
   return (
     <div className="space-y-5">
-      <MetricGrid counts={orderCounts.counts} loading={orderCounts.isLoading} />
-      <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-        <OrderDistribution counts={orderCounts.counts} loading={orderCounts.isLoading} />
-        <QuickActions />
-      </div>
+      <OrderPipelineOverview counts={orderCounts.counts} loading={orderCounts.isLoading} />
+      <QuickActions />
     </div>
   )
 }
 
-function MetricGrid({ counts, loading }: { counts: Record<OrderStatus, number>; loading: boolean }) {
-  const cards: Array<{ status: 'Pending' | 'Confirmed' | 'Processing' | 'Completed'; icon: typeof ClipboardList; tone: 'warning' | 'info' | 'accent' | 'success' }> = [
-    { status: 'Pending' as const, icon: ClipboardList, tone: 'warning' },
-    { status: 'Confirmed' as const, icon: ClipboardCheck, tone: 'info' },
-    { status: 'Processing' as const, icon: CircleDashed, tone: 'accent' },
-    { status: 'Completed' as const, icon: CheckCircle2, tone: 'success' },
-  ]
-  const toneClasses = { warning: 'text-warning bg-warning-subtle', info: 'text-info bg-info-subtle', accent: 'text-accent bg-accent-subtle', success: 'text-success bg-success-subtle' }
-  return (
-    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Resumo de pedidos">
-      {cards.map(({ status, icon: Icon, tone }) => (
-        <Panel key={status} className="relative overflow-hidden p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div><p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-text-tertiary">{ORDER_STATUS_LABEL[status]}</p><p className="mt-2 text-3xl font-semibold tabular-nums tracking-[-0.04em] text-text-primary">{loading ? '—' : counts[status]}</p></div>
-            <span className={`flex size-10 items-center justify-center rounded-md ${toneClasses[tone]}`}><Icon className="size-5" strokeWidth={1.8} /></span>
-          </div>
-          <div className="absolute inset-x-0 bottom-0 h-0.5" style={{ backgroundColor: STATUS_COLORS[status] }} />
-        </Panel>
-      ))}
-    </section>
-  )
-}
+/**
+ * Single source of truth for order-status volume: previously the same five
+ * counts were shown twice (a stat-card grid, then a donut chart repeating
+ * them). This reads the real lifecycle left-to-right instead.
+ */
+function OrderPipelineOverview({ counts, loading }: { counts: Record<OrderStatus, number>; loading: boolean }) {
+  const cancelled = counts.Cancelled
 
-function OrderDistribution({ counts, loading }: { counts: Record<OrderStatus, number>; loading: boolean }) {
-  const total = DISTRIBUTION_STATUSES.reduce((sum, status) => sum + counts[status], 0)
-  const segments = DISTRIBUTION_STATUSES.map((status, index) => {
-    const start = total ? DISTRIBUTION_STATUSES.slice(0, index).reduce((sum, item) => sum + counts[item], 0) / total * 100 : 0
-    const end = total ? start + counts[status] / total * 100 : 0
-    return `${STATUS_COLORS[status]} ${start}% ${end}%`
-  })
   return (
-    <Panel className="p-5">
-      <SectionTitle title="Pedidos por status" description="Distribuição atual dos pedidos" />
-      {loading ? <div className="mt-5 h-44 animate-pulse rounded-md bg-surface-inset" /> : total === 0 ? <div className="flex h-44 items-center justify-center text-[13px] text-text-tertiary">Nenhum pedido para distribuir.</div> : (
-        <div className="mt-5 flex flex-col items-center gap-6 sm:flex-row sm:justify-around">
-          <div className="relative size-40 shrink-0 rounded-full" style={{ background: `conic-gradient(${segments.join(',')})` }}><div className="absolute inset-[18px] flex flex-col items-center justify-center rounded-full bg-surface"><strong className="text-2xl text-text-primary">{total}</strong><span className="text-[11px] text-text-tertiary">pedidos</span></div></div>
-          <ul className="grid w-full gap-2.5">
-            {DISTRIBUTION_STATUSES.map((status) => <li key={status} className="flex items-center justify-between gap-5 text-[12px]"><span className="flex items-center gap-2 text-text-secondary"><span className="size-2 rounded-full" style={{ backgroundColor: STATUS_COLORS[status] }} />{ORDER_STATUS_LABEL[status]}</span><strong className="tabular-nums text-text-primary">{counts[status]}</strong></li>)}
-          </ul>
-        </div>
+    <Panel className="p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <SectionTitle title="Fluxo de pedidos" description="Volume em cada etapa do ciclo de vida" />
+        {!loading && cancelled > 0 ? (
+          <Badge tone="danger">
+            {cancelled} cancelado{cancelled === 1 ? '' : 's'}
+          </Badge>
+        ) : null}
+      </div>
+
+      {loading ? (
+        <div className="mt-7 h-20 animate-pulse rounded-md bg-surface-inset" />
+      ) : (
+        <>
+          {/* Below sm: a compact key-value list reads better than a rail forced to scroll. */}
+          <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-3 sm:hidden">
+            {FLOW_STATUSES.map((status) => {
+              const value = counts[status]
+              return (
+                <div key={status} className="flex items-baseline justify-between gap-2 border-b border-border pb-2">
+                  <dt className="text-[11px] font-medium uppercase tracking-[0.06em] text-text-tertiary">{ORDER_STATUS_LABEL[status]}</dt>
+                  <dd
+                    className="text-[18px] font-semibold tabular-nums tracking-[-0.02em]"
+                    style={{ color: value > 0 ? STATUS_COLORS[status] : 'var(--color-text-muted)' }}
+                  >
+                    {value}
+                  </dd>
+                </div>
+              )
+            })}
+          </dl>
+
+          <div className="mt-8 hidden items-start sm:flex">
+            {FLOW_STATUSES.map((status, index) => {
+              const value = counts[status]
+              const hasVolume = value > 0
+              const isLast = index === FLOW_STATUSES.length - 1
+              return (
+                <div key={status} className={clsx('flex items-start', !isLast && 'min-w-[92px] flex-1')}>
+                  <div className="flex min-w-[76px] flex-col items-center gap-2">
+                    <span
+                      className="text-[28px] font-semibold leading-none tabular-nums tracking-[-0.03em]"
+                      style={{ color: hasVolume ? STATUS_COLORS[status] : 'var(--color-text-muted)' }}
+                    >
+                      {value}
+                    </span>
+                    <span className="whitespace-nowrap text-[11px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
+                      {ORDER_STATUS_LABEL[status]}
+                    </span>
+                  </div>
+                  {!isLast ? (
+                    <div
+                      className="mx-2 mt-[13px] h-px flex-1"
+                      style={{ background: hasVolume ? STATUS_COLORS[status] : 'var(--color-border-strong)' }}
+                    />
+                  ) : null}
+                </div>
+              )
+            })}
+          </div>
+        </>
       )}
     </Panel>
   )

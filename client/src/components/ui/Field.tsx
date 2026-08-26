@@ -1,8 +1,16 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, useId } from 'react'
 import { clsx } from 'clsx'
+import { ChevronDown } from 'lucide-react'
 
 const controlClasses =
   'h-10 w-full rounded-sm border border-border-strong bg-surface-inset px-3 text-[13px] text-text-primary shadow-inner shadow-black/10 placeholder:text-text-muted transition-colors focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-60'
+
+/** Shared native-select styling: appearance-none body + a manually drawn chevron, kept in sync across every select in the app. */
+export const selectControlClasses = clsx(controlClasses, 'appearance-none pr-9 cursor-pointer')
+
+export function SelectChevron() {
+  return <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-text-tertiary" aria-hidden="true" />
+}
 
 interface FieldWrapperProps {
   label: string
@@ -70,16 +78,19 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
     const fieldId = id ?? generatedId
     return (
       <FieldWrapper label={label} htmlFor={fieldId} error={error} hint={hint} required={required}>
-        <select
-          ref={ref}
-          id={fieldId}
-          required={required}
-          aria-invalid={!!error}
-          className={clsx(controlClasses, 'appearance-none bg-[position:right_10px_center] bg-no-repeat', error && 'border-danger', className)}
-          {...props}
-        >
-          {children}
-        </select>
+        <div className="relative">
+          <select
+            ref={ref}
+            id={fieldId}
+            required={required}
+            aria-invalid={!!error}
+            className={clsx(selectControlClasses, error && 'border-danger', className)}
+            {...props}
+          >
+            {children}
+          </select>
+          <SelectChevron />
+        </div>
       </FieldWrapper>
     )
   },

@@ -1,11 +1,11 @@
-import { Boxes, ShieldCheck, Workflow, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { Badge } from '@/components/ui/Badge'
 import { Logo } from '@/components/ui/Logo'
 
-const capabilities: Array<{ icon: LucideIcon; text: string }> = [
-  { icon: Boxes, text: 'Estoque transacional e rastreável' },
-  { icon: Workflow, text: 'Pedidos com workflow operacional' },
-  { icon: ShieldCheck, text: 'Acesso protegido por perfil' },
+const LEDGER_PREVIEW: Array<{ label: string; tone: 'success' | 'warning' | 'info'; sku: string; qty: string }> = [
+  { label: 'Recebimento', tone: 'success', sku: 'SKU-2201', qty: '+40' },
+  { label: 'Reserva', tone: 'warning', sku: 'SKU-1187', qty: '−6' },
+  { label: 'Atendimento', tone: 'info', sku: 'SKU-1187', qty: '−6' },
 ]
 
 export function AuthLayout({ title, description, children, footer }: { title: string; description: string; children: ReactNode; footer: ReactNode }) {
@@ -18,7 +18,20 @@ export function AuthLayout({ title, description, children, footer }: { title: st
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent-subtle-text">Gestão operacional</p>
           <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-[-0.04em] text-text-primary">Pedidos e estoque sob controle.</h1>
           <p className="mt-4 max-w-sm text-[15px] leading-6 text-text-tertiary">Uma visão única para acompanhar catálogo, disponibilidade e execução de pedidos.</p>
-          <ul className="mt-9 space-y-4">{capabilities.map(({ icon: Icon, text }) => <li key={text} className="flex items-center gap-3 text-[13px] text-text-secondary"><span className="flex size-9 items-center justify-center rounded-sm border border-accent/20 bg-accent-subtle text-accent-subtle-text"><Icon className="size-4" /></span>{text}</li>)}</ul>
+          <div className="mt-9 rounded-lg border border-border bg-surface/70 p-4" aria-hidden="true">
+            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-text-muted">Livro de movimentações · somente leitura</p>
+            <div className="space-y-2.5">
+              {LEDGER_PREVIEW.map((row, i) => (
+                <div key={i} className="flex items-center justify-between gap-3">
+                  <span className="flex items-center gap-2.5">
+                    <Badge tone={row.tone}>{row.label}</Badge>
+                    <span className="font-mono text-[11px] text-text-muted">{row.sku}</span>
+                  </span>
+                  <span className="font-mono text-[12px] tabular-nums text-text-secondary">{row.qty}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
         <p className="relative text-[11px] text-text-muted">OrderInventory · Operação segura e consistente</p>
       </section>

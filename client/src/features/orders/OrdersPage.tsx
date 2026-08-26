@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { clsx } from 'clsx'
 import { Plus } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { createOrder, listManagementOrders, listMyOrders } from '@/api/orders'
@@ -6,6 +7,7 @@ import { useAuth } from '@/auth/useAuth'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { selectControlClasses, SelectChevron } from '@/components/ui/Field'
 import { Pagination } from '@/components/ui/Pagination'
 import { Panel } from '@/components/ui/Panel'
 import { EmptyState, ErrorState, LoadingRows } from '@/components/ui/States'
@@ -82,19 +84,22 @@ export function OrdersPage() {
       />
 
       <div className="flex items-center gap-2 px-6 pt-4">
-        <select
-          aria-label="Filtrar pedidos por status"
-          value={status ?? ''}
-          onChange={(e) => updateParams({ status: e.target.value || undefined })}
-          className="h-9 rounded-sm border border-border-strong bg-surface-inset px-3 text-[13px] text-text-primary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/25"
-        >
-          <option value="">Todos os status</option>
-          {STATUS_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {ORDER_STATUS_LABEL[s]}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            aria-label="Filtrar pedidos por status"
+            value={status ?? ''}
+            onChange={(e) => updateParams({ status: e.target.value || undefined })}
+            className={clsx(selectControlClasses, 'h-9 w-auto min-w-[180px]')}
+          >
+            <option value="">Todos os status</option>
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {ORDER_STATUS_LABEL[s]}
+              </option>
+            ))}
+          </select>
+          <SelectChevron />
+        </div>
       </div>
 
       <div className="p-6">
