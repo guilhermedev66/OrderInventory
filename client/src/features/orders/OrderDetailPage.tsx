@@ -13,7 +13,6 @@ import {
 } from '@/api/orders'
 import { useAuth } from '@/auth/useAuth'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { OrderStatusRail } from '@/components/ui/OrderStatusRail'
@@ -262,9 +261,7 @@ function Timestamp({ label, value }: { label: string; value: string | null }) {
   return (
     <div>
       <dt className="text-text-tertiary">{label}</dt>
-      <dd className="mt-0.5 text-text-secondary">
-        {value ? formatDateTime(value) : <Badge tone="neutral">—</Badge>}
-      </dd>
+      <dd className="mt-0.5 text-text-secondary">{value ? formatDateTime(value) : <span className="text-text-muted">—</span>}</dd>
     </div>
   )
 }
