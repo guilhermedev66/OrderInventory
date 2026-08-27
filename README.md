@@ -6,7 +6,7 @@
 
 Um sistema full stack para operações de inventário, construído como monólito modular e focado em regras de negócio reais: reservas concorrentes, rastreabilidade de movimentações, autorização por perfil e proteção de invariantes no PostgreSQL.
 
-**Status: Development complete — public deployment pending**
+**Status: Concluído e publicado**
 
 [![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![React](https://img.shields.io/badge/React-19-20232A?logo=react&logoColor=61DAFB)](https://react.dev/)
@@ -198,7 +198,12 @@ Ferramentas de IA apoiaram implementação, revisão de código, testes, debuggi
 
 ## Deploy
 
-O desenvolvimento está concluído e o deploy público é a próxima etapa. URLs de frontend, API e Swagger serão adicionadas somente após cada serviço estar publicado e validado.
+- Frontend: [order-inventory-psi.vercel.app](https://order-inventory-psi.vercel.app)
+- API base URL: `https://orderinventory-api-guilhermedev66.onrender.com`
+- Health check: [orderinventory-api-guilhermedev66.onrender.com/health](https://orderinventory-api-guilhermedev66.onrender.com/health)
+- OpenAPI: [orderinventory-api-guilhermedev66.onrender.com/openapi/v1.json](https://orderinventory-api-guilhermedev66.onrender.com/openapi/v1.json)
+
+O frontend é publicado pela Vercel e a API pelo Render. No plano gratuito do Render, a primeira requisição após um período sem uso pode aguardar o cold start do serviço.
 
 ## Autor
 
